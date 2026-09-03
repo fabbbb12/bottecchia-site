@@ -1,6 +1,12 @@
 import pandas as pd
 
-from tradebot.backtest import BacktestResult, _max_drawdown_pct, _return_metrics, print_report
+from tradebot.backtest import (
+    BacktestResult,
+    _max_drawdown_pct,
+    _return_metrics,
+    print_aggregate_comparison,
+    print_report,
+)
 
 
 def test_max_drawdown_pct_basic():
@@ -56,3 +62,26 @@ def test_print_report_flags_better_drawdown_than_benchmark(capsys):
     print_report(result, "TEST")
     out = capsys.readouterr().out
     assert "protegeu capital melhor" in out
+
+
+def test_print_aggregate_comparison_win_count_ignores_average_distortion(capsys):
+    # A: estratégia perde feio (arrasta a média pra baixo), mas B e C ela vence
+    # por pouco -> a média pode enganar, a contagem de vitórias não.
+    results = {
+        "A": _make_result([100, 100, 50, 60], [100, 200, 250, 300]),
+        "B": _make_result([100, 105, 108, 110], [100, 102, 103, 104]),
+        "C": _make_result([100, 103, 105, 107], [100, 101, 102, 103]),
+    }
+    print_aggregate_comparison(results)
+    out = capsys.readouterr().out
+    assert "2/3" in out  # vence em Retorno em 2 dos 3 ativos (B e C, perde em A)
+
+
+def test_print_aggregate_comparison_reports_median_separately_from_mean(capsys):
+    results = {
+        "A": _make_result([100, 120, 90, 110], [100, 105, 108, 112]),
+        "B": _make_result([100, 110, 120, 130], [100, 101, 102, 103]),
+    }
+    print_aggregate_comparison(results)
+    out = capsys.readouterr().out
+    assert "Med. Estr" in out and "Média Estr" in out

@@ -2,6 +2,7 @@
 da carteira simulada, sem nenhuma conexão com corretora real."""
 
 import logging
+import statistics
 from dataclasses import dataclass
 
 import numpy as np
@@ -252,35 +253,74 @@ def print_summary_table(results: dict[str, BacktestResult]) -> None:
 
 
 def print_aggregate_comparison(results: dict[str, BacktestResult]) -> None:
-    """Média das métricas em todos os símbolos, estratégia vs buy-and-hold
-    lado a lado — a visão que realmente importa para decidir se a troca de
-    risco por retorno compensa, em vez de olhar ativo por ativo."""
+    """Estatísticas das métricas em todos os símbolos, estratégia vs
+    buy-and-hold: média, mediana e nº de ativos em que a estratégia supera o
+    buy-and-hold em cada métrica. A mediana e a contagem de vitórias importam
+    porque a média sozinha pode ser dominada por 1-2 ativos com resultado
+    muito fora da curva (ex: um único ativo com alta forte no período)."""
     if not results:
         return
 
-    def avg(key: str, source: str) -> float:
-        values = [
-            (r.metrics if source == "strategy" else r.benchmark_metrics)[key] for r in results.values()
-        ]
-        return sum(values) / len(values)
-
-    def avg_field(values: list[float]) -> float:
-        return sum(values) / len(values) if values else 0.0
-
+    n = len(results)
     pnl_pcts = [r.final_summary["pnl_pct"] for r in results.values()]
     bench_pnl_pcts = [
         (r.benchmark_curve.iloc[-1] - r.benchmark_curve.iloc[0]) / r.benchmark_curve.iloc[0] * 100
         for r in results.values()
     ]
-    max_dds = [r.metrics["max_drawdown_pct"] for r in results.values()]
-    bench_max_dds = [r.benchmark_metrics["max_drawdown_pct"] for r in results.values()]
 
-    print(f"\n=== Média entre {len(results)} ativos: Estratégia vs Buy&Hold ===")
-    print(f"{'Métrica':<15}{'Estratégia':>14}{'Buy&Hold':>14}")
-    print("-" * 43)
-    print(f"{'Retorno':<15}{avg_field(pnl_pcts):>13.2f}%{avg_field(bench_pnl_pcts):>13.2f}%")
-    print(f"{'CAGR':<15}{avg('cagr_pct', 'strategy'):>13.2f}%{avg('cagr_pct', 'benchmark'):>13.2f}%")
-    print(f"{'Máx. drawdown':<15}{avg_field(max_dds):>13.2f}%{avg_field(bench_max_dds):>13.2f}%")
-    print(f"{'Sharpe':<15}{avg('sharpe', 'strategy'):>14.2f}{avg('sharpe', 'benchmark'):>14.2f}")
-    print(f"{'Sortino':<15}{avg('sortino', 'strategy'):>14.2f}{avg('sortino', 'benchmark'):>14.2f}")
-    print(f"{'Calmar':<15}{avg('calmar', 'strategy'):>14.2f}{avg('calmar', 'benchmark'):>14.2f}")
+    metric_pairs: list[tuple[str, list[float], list[float]]] = [
+        ("Retorno", pnl_pcts, bench_pnl_pcts),
+        (
+            "CAGR",
+            [r.metrics["cagr_pct"] for r in results.values()],
+            [r.benchmark_metrics["cagr_pct"] for r in results.values()],
+        ),
+        (
+            "Máx. drawdown",
+            [r.metrics["max_drawdown_pct"] for r in results.values()],
+            [r.benchmark_metrics["max_drawdown_pct"] for r in results.values()],
+        ),
+        (
+            "Sharpe",
+            [r.metrics["sharpe"] for r in results.values()],
+            [r.benchmark_metrics["sharpe"] for r in results.values()],
+        ),
+        (
+            "Sortino",
+            [r.metrics["sortino"] for r in results.values()],
+            [r.benchmark_metrics["sortino"] for r in results.values()],
+        ),
+        (
+            "Calmar",
+            [r.metrics["calmar"] for r in results.values()],
+            [r.benchmark_metrics["calmar"] for r in results.values()],
+        ),
+    ]
+
+    print(f"\n=== Estratégia vs Buy&Hold entre {n} ativos (média, mediana, vitórias) ===")
+    header = (
+        f"{'Métrica':<15}{'Média Estr':>12}{'Média B&H':>12}{'Dif. média':>12}"
+        f"{'Med. Estr':>12}{'Med. B&H':>12}{'Vitórias':>10}"
+    )
+    print(header)
+    print("-" * len(header))
+    for name, strategy_values, bench_values in metric_pairs:
+        mean_s = sum(strategy_values) / n
+        mean_b = sum(bench_values) / n
+        median_s = statistics.median(strategy_values)
+        median_b = statistics.median(bench_values)
+        wins = sum(1 for s, b in zip(strategy_values, bench_values) if s > b)
+        unit = "" if name in ("Sharpe", "Sortino", "Calmar") else "%"
+        with np.errstate(invalid="ignore"):  # inf - inf = nan é esperado aqui, não um erro
+            diff = mean_s - mean_b
+        diff_str = "n/d" if diff != diff else f"{diff:.2f}{unit}"  # NaN só ocorre com inf - inf
+        print(
+            f"{name:<15}{mean_s:>10.2f}{unit:<2}{mean_b:>10.2f}{unit:<2}{diff_str:>12}"
+            f"{median_s:>10.2f}{unit:<2}{median_b:>10.2f}{unit:<2}{wins:>6}/{n}"
+        )
+
+    print(
+        "\nDica de leitura: 'Vitórias' conta em quantos ativos a estratégia superou o "
+        "buy-and-hold naquela métrica especificamente — a média sozinha pode ser puxada "
+        "por 1-2 ativos fora da curva."
+    )
