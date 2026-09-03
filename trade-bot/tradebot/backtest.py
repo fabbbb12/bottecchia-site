@@ -37,10 +37,14 @@ def run_backtest(
     for timestamp, row in signals.iterrows():
         price = float(row["close"])
         pos = portfolio.position(symbol)
-        action = apply_risk_management(row["action"], pos.quantity, pos.avg_price, price, strategy_cfg)
+        if pos.quantity > 0:
+            pos.peak_price = max(pos.peak_price, price)
+        action = apply_risk_management(row["action"], pos.quantity, pos.avg_price, pos.peak_price, price, strategy_cfg)
 
         if action == "BUY":
-            portfolio.buy(timestamp, symbol, price, cash_fraction)
+            fill = portfolio.buy(timestamp, symbol, price, cash_fraction)
+            if fill:
+                pos.peak_price = fill.price
         elif action == "SELL":
             portfolio.sell(timestamp, symbol, price, position_fraction=1.0)
 

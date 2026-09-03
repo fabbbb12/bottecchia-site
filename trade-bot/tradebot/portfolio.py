@@ -23,6 +23,7 @@ class Fill:
 class Position:
     quantity: float = 0.0
     avg_price: float = 0.0
+    peak_price: float = 0.0
 
 
 class Portfolio:
@@ -85,6 +86,7 @@ class Portfolio:
         if pos.quantity <= 1e-12:
             pos.quantity = 0.0
             pos.avg_price = 0.0
+            pos.peak_price = 0.0
         self.cash += proceeds - fee
 
         fill = Fill(timestamp, symbol, "SELL", quantity, fill_price, fee)

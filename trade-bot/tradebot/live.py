@@ -29,6 +29,7 @@ def _load_or_create_portfolio(path: Path, starting_cash: float) -> Portfolio:
             p = portfolio.position(symbol)
             p.quantity = pos["quantity"]
             p.avg_price = pos["avg_price"]
+            p.peak_price = pos.get("peak_price", pos["avg_price"])
     return portfolio
 
 
@@ -36,7 +37,7 @@ def _save_portfolio(path: Path, portfolio: Portfolio) -> None:
     data = {
         "cash": portfolio.cash,
         "positions": {
-            s: {"quantity": p.quantity, "avg_price": p.avg_price}
+            s: {"quantity": p.quantity, "avg_price": p.avg_price, "peak_price": p.peak_price}
             for s, p in portfolio.positions.items()
         },
     }
@@ -60,11 +61,15 @@ def run_once(
     score = float(last["score"])
 
     pos = portfolio.position(symbol)
-    action = apply_risk_management(last["action"], pos.quantity, pos.avg_price, price, strategy_cfg)
+    if pos.quantity > 0:
+        pos.peak_price = max(pos.peak_price, price)
+    action = apply_risk_management(last["action"], pos.quantity, pos.avg_price, pos.peak_price, price, strategy_cfg)
 
     fill = None
     if action == "BUY":
         fill = portfolio.buy(last.name, symbol, price, cash_fraction)
+        if fill:
+            pos.peak_price = fill.price
     elif action == "SELL":
         fill = portfolio.sell(last.name, symbol, price, position_fraction=1.0)
 

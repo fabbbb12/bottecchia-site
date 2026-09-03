@@ -31,7 +31,13 @@ class StrategyConfig:
     buy_threshold: float = 2.0
     sell_threshold: float = -2.0
     stop_loss_pct: float = 0.06
-    take_profit_pct: float = 0.15
+    # Em vez de vender sempre ao bater um alvo fixo de lucro (o que corta
+    # tendências longas cedo demais), usa um stop móvel: só vende a posição
+    # lucrativa quando o preço recuar `trailing_stop_pct` a partir do maior
+    # preço atingido desde a entrada, e só depois de já estar com pelo menos
+    # `trailing_activate_pct` de lucro (evita apertar o stop logo na entrada).
+    trailing_activate_pct: float = 0.08
+    trailing_stop_pct: float = 0.10
 
 
 def compute_indicators(df: pd.DataFrame, cfg: StrategyConfig) -> pd.DataFrame:
@@ -112,14 +118,26 @@ def decide_action(score: float, cfg: StrategyConfig) -> str:
 
 
 def apply_risk_management(
-    action: str, position_qty: float, position_avg_price: float, current_price: float, cfg: StrategyConfig
+    action: str,
+    position_qty: float,
+    position_avg_price: float,
+    position_peak_price: float,
+    current_price: float,
+    cfg: StrategyConfig,
 ) -> str:
-    """Força uma venda quando a posição aberta atinge o stop-loss ou o
-    take-profit, independentemente do que o score dos indicadores diga —
-    protege contra segurar uma perda grande esperando o indicador virar."""
+    """Força uma venda quando a posição aberta atinge o stop-loss, ou quando
+    o stop móvel (trailing stop) é acionado — protege contra segurar uma
+    perda grande esperando o indicador virar, sem travar o lucro cedo demais
+    numa tendência longa."""
     if position_qty > 0 and position_avg_price > 0:
-        change = (current_price - position_avg_price) / position_avg_price
-        if change <= -cfg.stop_loss_pct or change >= cfg.take_profit_pct:
+        change_from_entry = (current_price - position_avg_price) / position_avg_price
+        if change_from_entry <= -cfg.stop_loss_pct:
+            return "SELL"
+
+        peak = max(position_peak_price, position_avg_price)
+        gain_from_entry_at_peak = (peak - position_avg_price) / position_avg_price
+        drawdown_from_peak = (current_price - peak) / peak
+        if gain_from_entry_at_peak >= cfg.trailing_activate_pct and drawdown_from_peak <= -cfg.trailing_stop_pct:
             return "SELL"
     return action
 
