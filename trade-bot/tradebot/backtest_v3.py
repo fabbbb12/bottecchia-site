@@ -23,6 +23,18 @@ depois de ver resultado):
   extremos e menos citados como suporte relevante.
 - Tolerância: preço a até 1,5% de algum desses níveis conta como "na
   zona" (`FIB_TOLERANCE_PCT`).
+
+RESULTADO: EXPERIMENTO REJEITADO (2021-2023 e 2018-2020 OOS, 11 ativos).
+Reduz drawdown de forma real e confirmada contra um placebo aleatório
+(V4) — a zona de Fibonacci carrega informação genuína sobre risco, não
+é ilusão. Mas como filtro de ENTRADA, corta tanto trade ruim quanto
+trade bom: retorno piorou vs V1 e chegou a perder até para o próprio
+placebo em retorno no período OOS. Levou à V5 (Fibonacci como position
+sizing em vez de filtro) e, depois, ao achado mais amplo replicado com
+Volume (V6): filtros "espertos" baseados em preço/volume carregam um
+viés de seleção dependente do regime de mercado que um corte aleatório
+de mesmo tamanho não tem — ver tradebot/backtest_v6.py para o
+detalhamento desse achado.
 """
 
 import logging

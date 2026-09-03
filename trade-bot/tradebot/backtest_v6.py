@@ -23,6 +23,26 @@ depois de ver resultado):
 - `RVOL_THRESHOLD = 1.5`: Volume Relativo mínimo no dia do sinal para a
   compra ser aceita — 1,5x a média é o valor mais citado na literatura
   de mercado como "volume confirmado"/"volume anômalo".
+
+RESULTADO: EXPERIMENTO REJEITADO (2021-2023 e 2018-2020 OOS, 11 ativos).
+Mesmo padrão da V3 e da V5: melhora forte no período 2021-2023 (retorno
+mediano -9,86%→+2,25%, drawdown -25,75%→-13,34%, Sharpe/Sortino/Calmar
+saindo do negativo) mas reverte no período 2018-2020 OOS (retorno
+mediano 17,45%→3,07%, Sharpe/Sortino/Calmar todos piorando).
+
+Achado mais importante que a rejeição em si: comparamos a V6 contra a
+V4 (placebo aleatório, mesma proporção de corte de trades) nos dois
+períodos. O placebo NÃO reproduz essa reviravolta — fica praticamente
+neutro nos dois períodos, só com uma melhora pequena de drawdown vinda
+de "operar menos" em geral. Isso mostra que o Volume Relativo (assim
+como a Fibonacci antes dele) carrega um viés de seleção real e
+específico, dependente do regime de mercado: ajuda a evitar trades ruins
+em mercado de vaivém (2021-2023) e atrapalha ao evitar trades bons em
+tendência sustentada (2018-2020). Um corte aleatório de mesmo tamanho
+não tem esse viés — por isso, paradoxalmente, é mais seguro que um
+filtro "esperto" se o objetivo é só reduzir drawdown sem arriscar
+retorno. Ver a mesma conclusão registrada em tradebot/backtest_v3.py
+e tradebot/backtest_v5.py.
 """
 
 import logging

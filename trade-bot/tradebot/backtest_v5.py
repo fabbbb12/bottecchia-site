@@ -22,6 +22,14 @@ V3, mais um novo):
 - `FAR_ZONE_SIZE_MULTIPLIER = 0.5`: metade do tamanho normal da posição
   quando o preço está longe de qualquer zona de Fibonacci no momento da
   compra. Perto de uma zona, o tamanho é o normal (100%, igual à V1).
+
+RESULTADO: EXPERIMENTO REJEITADO (2021-2023 e 2018-2020 OOS, 11 ativos).
+Resultado inconsistente entre os dois períodos (não só fraco — inverte
+de sinal): melhora retorno/Sharpe/Sortino/Calmar em 2018-2020 mas piora
+todos eles em 2021-2023, com redução de drawdown pequena (1-2pp) nos
+dois. Ver tradebot/backtest_v6.py para o achado consolidado (via
+placebo V4) de que filtros baseados em preço/volume carregam um viés de
+seleção dependente do regime de mercado.
 """
 
 import logging

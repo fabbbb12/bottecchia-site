@@ -22,13 +22,28 @@ redução de drawdown, não um gerador de retorno superior ao buy-and-hold.**
 - **Retorno, CAGR, Sharpe, Sortino, Calmar: sem vantagem** — 0-1 das 6
   janelas, 13-21 das 66 combinações. Não é distorção de outlier (mediana e
   contagem de vitórias confirmam a mesma coisa que a média).
-- **Experimento V2** (permitir reentrada mais rápida depois de uma venda,
-  em vez de esperar o sinal de compra completo) foi testado e
-  **rejeitado**: não melhorou o retorno de forma clara nem tirou
-  Sharpe/Sortino da zona negativa, e aumentou o giro de operações (mais
-  custo) sem contrapartida. Ver `tradebot/backtest_v2.py` para os
-  detalhes — mantido no repositório como registro do experimento, não
-  como algo a usar.
+- **Quatro experimentos testados depois da V1, todos rejeitados:**
+  - **V2** (reentrada antecipada após venda): piorou retorno e
+    Sharpe/Sortino, com mais giro sem contrapartida.
+  - **V3** (filtro de Fibonacci na entrada): reduz drawdown de forma
+    real e confirmada contra um placebo aleatório, mas corta trade bom
+    junto com trade ruim — retorno piora, perdeu até para o placebo.
+  - **V5** (Fibonacci como tamanho de posição em vez de filtro):
+    resultado inconsistente entre períodos — melhora num, piora no
+    outro, na mesma métrica.
+  - **V6** (filtro de Volume Relativo): mesmo padrão da V3 — melhora
+    forte no período 2021-2023, reverte no OOS 2018-2020.
+  - **Achado consolidado**, confirmado com um placebo (V4, corte
+    aleatório de trades na mesma proporção): filtros "espertos"
+    baseados em preço ou volume carregam um viés de seleção
+    **dependente do regime de mercado** — ajudam a evitar trades ruins
+    em mercado de vaivém e atrapalham ao evitar trades bons em
+    tendência sustentada. Um corte aleatório de mesmo tamanho não tem
+    esse viés, sendo paradoxalmente mais seguro que os filtros
+    "inteligentes" se o objetivo é só reduzir drawdown. Detalhes em
+    `tradebot/backtest_v2.py`, `backtest_v3.py`, `backtest_v5.py` e
+    `backtest_v6.py` — mantidos no repositório como registro dos
+    experimentos, não como algo a usar.
 
 Ou seja: útil para quem valoriza uma trajetória com menos dor no pior
 momento e aceita abrir mão de retorno para isso; **não é** uma estratégia
