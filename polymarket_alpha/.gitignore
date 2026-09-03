@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/database/*.db
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+reports/phase_1_report.md

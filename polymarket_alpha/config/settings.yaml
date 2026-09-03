@@ -1,0 +1,23 @@
+# Configuração de endpoints e período de coleta.
+#
+# ATENÇÃO — ENDPOINTS NÃO VERIFICADOS NESTA SESSÃO DE DESENVOLVIMENTO:
+# a rede deste ambiente bloqueia acesso a domínios da Polymarket e à
+# documentação oficial (docs.polymarket.com), então os caminhos abaixo
+# foram escritos com base em conhecimento geral sobre a API pública, SEM
+# confirmação ao vivo. Antes de rodar `python main.py collect`, confirme
+# cada endpoint em https://docs.polymarket.com e ajuste aqui se precisar.
+
+api:
+  gamma_base_url: "https://gamma-api.polymarket.com"   # metadados de markets/events
+  clob_base_url: "https://clob.polymarket.com"          # order book, preços, trades
+  request_timeout_seconds: 15
+  verified_against_docs: false
+
+# Separação IS/OOS (Seção 16) — definidos ANTES de olhar qualquer
+# resultado, não depois. Ajustar conforme a disponibilidade real dos
+# dados coletados (a spec explicitamente pede isso).
+backtest_periods:
+  in_sample_start: null   # preencher com epoch UTC depois da primeira coleta
+  in_sample_end: null
+  out_of_sample_start: null
+  out_of_sample_end: null

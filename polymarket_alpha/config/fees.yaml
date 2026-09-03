@@ -1,0 +1,22 @@
+# Estrutura de taxas usada nos experimentos — mantida configurável e
+# separada do código (Seção 12 da spec).
+#
+# IMPORTANTE: estes valores NÃO foram verificados contra a documentação
+# atual do Polymarket a partir deste ambiente (rede bloqueada durante o
+# desenvolvimento). Confirme na documentação oficial antes de rodar
+# qualquer experimento com esses números — ver polymarket_alpha/README.md.
+#
+# Historicamente, a CLOB da Polymarket não cobra taker/maker fee direta em
+# USDC na maioria dos mercados (o "custo" real vem majoritariamente de
+# spread e slippage, não de uma taxa percentual explícita). Deixamos os
+# campos abaixo para que o experimento registre explicitamente qual
+# estrutura foi usada, e para não assumir "sem custo" silenciosamente.
+
+trading_fee_bps: 0          # taxa de negociação, em pontos-base (1 bps = 0.01%)
+gas_cost_usd: 0.0           # custo estimado de rede por operação, em USD
+slippage_model: "orderbook_vwap"  # slippage é derivado do book (Seção 6), não estimado à parte
+
+# Fonte/data de verificação — preencher manualmente depois de checar a
+# documentação oficial:
+verified_against: null
+verified_at: null
