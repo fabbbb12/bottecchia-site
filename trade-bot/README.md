@@ -22,10 +22,12 @@
    ou `HOLD`. Isso evita depender de um único indicador isolado.
 3. **"Executa"** a decisão em uma carteira simulada (`Portfolio`): desconta
    taxa e slippage, atualiza caixa/posição e guarda o histórico de ordens.
-   Além do sinal dos indicadores, há **stop-loss e take-profit** por posição
-   (`StrategyConfig.stop_loss_pct` / `take_profit_pct`): a posição é
-   liquidada automaticamente se a perda ou o ganho ultrapassar esses
-   limites, mesmo que o score dos indicadores ainda não tenha virado.
+   Além do sinal dos indicadores, há gestão de risco por posição
+   (`tradebot/strategy.py::apply_risk_management`): um **stop-loss fixo**
+   (`stop_loss_pct`) corta perdas cedo, e um **trailing stop baseado em ATR**
+   (volatilidade recente do próprio ativo, `trailing_atr_mult`) protege o
+   lucro sem cortar tendências longas cedo demais nem vender por oscilação
+   normal em ativos mais voláteis.
 4. Pode rodar em dois modos:
    - `backtest`: aplica a estratégia sobre um histórico, mostra o resultado
      e compara contra **buy-and-hold** (comprar e segurar o ativo sem
@@ -93,6 +95,27 @@ python -m tradebot live --symbol PETR4.SA --interval 1d --poll-seconds 3600 --ch
 
 Use `--iterations N` no modo `live` para limitar o número de ciclos (útil
 para testar sem rodar indefinidamente).
+
+## Validação fora da amostra (out-of-sample)
+
+**Importante:** ajustar parâmetros olhando sempre o mesmo período histórico
+e escolher a combinação que "deu mais lucro" é uma armadilha clássica
+(overfitting) — o bot aprende a decorar o passado, não a lidar com o
+futuro. Depois de qualquer ajuste na estratégia, valide numa janela de
+tempo que **não** foi usada para ajustar nada, usando `--start`/`--end`
+(datas fixas) em vez de `--period` (que é sempre relativo a hoje):
+
+```bash
+# Ajustou parâmetros olhando os últimos 2 anos? Teste numa janela anterior,
+# nunca vista, antes de confiar no resultado:
+python -m tradebot backtest --market all --start 2018-01-01 --end 2020-01-01 --chart
+```
+
+Se a estratégia só performa bem no período usado para ajustar e vai mal
+fora dele, o resultado bom foi coincidência, não capacidade real. O
+próximo passo, mais rigoroso ainda, é *walk-forward* (repetir esse
+processo em várias janelas consecutivas de treino/teste) — ainda não
+implementado aqui, mas é o caminho natural depois de validar out-of-sample.
 
 ## Rodando os testes
 

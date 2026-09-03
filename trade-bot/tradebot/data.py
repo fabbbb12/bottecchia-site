@@ -8,16 +8,38 @@ import pandas as pd
 import yfinance as yf
 
 
-def fetch_ohlcv(symbol: str, period: str = "6mo", interval: str = "1d") -> pd.DataFrame:
+def fetch_ohlcv(
+    symbol: str,
+    period: str = "6mo",
+    interval: str = "1d",
+    start: str | None = None,
+    end: str | None = None,
+) -> pd.DataFrame:
     """Baixa histórico de preços e devolve um DataFrame com colunas
-    padronizadas em minúsculo: open, high, low, close, volume."""
-    raw = yf.download(
-        symbol,
-        period=period,
-        interval=interval,
-        progress=False,
-        auto_adjust=True,
-    )
+    padronizadas em minúsculo: open, high, low, close, volume.
+
+    Se `start` (e opcionalmente `end`) forem informados (formato
+    'AAAA-MM-DD'), usa esse intervalo de datas fixo em vez de `period` —
+    necessário para testes fora da amostra (out-of-sample), onde o período
+    precisa ser uma janela específica do passado, não "os últimos N anos a
+    partir de hoje"."""
+    if start:
+        raw = yf.download(
+            symbol,
+            start=start,
+            end=end,
+            interval=interval,
+            progress=False,
+            auto_adjust=True,
+        )
+    else:
+        raw = yf.download(
+            symbol,
+            period=period,
+            interval=interval,
+            progress=False,
+            auto_adjust=True,
+        )
     if raw.empty:
         raise ValueError(f"Nenhum dado retornado para o símbolo '{symbol}'.")
 

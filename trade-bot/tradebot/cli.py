@@ -3,6 +3,7 @@
     python -m tradebot backtest --symbol AAPL --period 1y --interval 1d --chart
     python -m tradebot backtest --market br --period 1y
     python -m tradebot backtest --market all --period 1y
+    python -m tradebot backtest --market all --start 2018-01-01 --end 2020-01-01  # fora da amostra
     python -m tradebot live --symbol PETR4.SA --interval 1d --poll-seconds 3600 --chart
 
 Tudo aqui é PAPER TRADING (simulado). Não há execução de ordens reais.
@@ -38,7 +39,9 @@ def build_parser() -> argparse.ArgumentParser:
     backtest_p.add_argument("--symbol", help="Um único símbolo, ex: AAPL, PETR4.SA")
     backtest_p.add_argument("--symbols", help="Lista separada por vírgula, ex: AAPL,MSFT,PETR4.SA")
     backtest_p.add_argument("--market", choices=["us", "br", "all"], help="Usa uma watchlist pronta (EUA, Bovespa ou ambas)")
-    backtest_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y")
+    backtest_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
+    backtest_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD) — use para testes fora da amostra")
+    backtest_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional — padrão é hoje")
 
     live_p = sub.add_parser("live", parents=[common], help="Loop de paper trading em quase-tempo-real")
     live_p.add_argument("--symbol", required=True, help="Um único símbolo, ex: AAPL, PETR4.SA")
@@ -66,7 +69,7 @@ def main(argv: list[str] | None = None) -> None:
         chart_dir = Path(args.chart_dir) if args.chart else None
 
         if len(symbols) == 1:
-            df = fetch_ohlcv(symbols[0], period=args.period, interval=args.interval)
+            df = fetch_ohlcv(symbols[0], period=args.period, interval=args.interval, start=args.start, end=args.end)
             result = run_backtest(
                 df,
                 symbols[0],
@@ -84,6 +87,8 @@ def main(argv: list[str] | None = None) -> None:
                 strategy_cfg,
                 period=args.period,
                 interval=args.interval,
+                start=args.start,
+                end=args.end,
                 starting_cash=args.cash,
                 cash_fraction=args.cash_fraction,
             )

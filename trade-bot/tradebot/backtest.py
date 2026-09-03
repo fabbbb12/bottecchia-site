@@ -100,6 +100,8 @@ def run_multi_backtest(
     strategy_cfg: StrategyConfig,
     period: str = "1y",
     interval: str = "1d",
+    start: str | None = None,
+    end: str | None = None,
     starting_cash: float = 10_000.0,
     cash_fraction: float = 0.5,
     fee_rate: float = 0.001,
@@ -112,7 +114,7 @@ def run_multi_backtest(
     results: dict[str, BacktestResult] = {}
     for symbol in symbols:
         try:
-            df = fetch_ohlcv(symbol, period=period, interval=interval)
+            df = fetch_ohlcv(symbol, period=period, interval=interval, start=start, end=end)
             results[symbol] = run_backtest(
                 df,
                 symbol,
