@@ -22,6 +22,7 @@ from tradebot.backtest_v2 import run_multi_backtest_v2
 from tradebot.backtest_v3 import run_multi_backtest_v3
 from tradebot.backtest_v4 import run_multi_backtest_v4
 from tradebot.backtest_v5 import run_multi_backtest_v5
+from tradebot.backtest_v6 import run_multi_backtest_v6
 from tradebot.charts import plot_signals
 from tradebot.comparison import print_fibonacci_placebo_test, print_v1_challenger_comparison
 from tradebot.data import fetch_ohlcv
@@ -78,11 +79,12 @@ def build_parser() -> argparse.ArgumentParser:
     compare_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
     compare_p.add_argument(
         "--challenger",
-        choices=["v2", "v3", "v4", "v5"],
+        choices=["v2", "v3", "v4", "v5", "v6"],
         default="v2",
         help=(
             "v2 = reentrada antecipada (rejeitada); v3 = filtro de Fibonacci (rejeitada); "
-            "v4 = placebo aleatório; v5 = Fibonacci como position sizing"
+            "v4 = placebo aleatório; v5 = Fibonacci como position sizing (rejeitada); "
+            "v6 = filtro de Volume Relativo"
         ),
     )
 
@@ -194,6 +196,7 @@ def main(argv: list[str] | None = None) -> None:
             "v3": run_multi_backtest_v3,
             "v4": run_multi_backtest_v4,
             "v5": run_multi_backtest_v5,
+            "v6": run_multi_backtest_v6,
         }
         challenger_fn = challenger_fns[args.challenger]
         challenger_results = challenger_fn(

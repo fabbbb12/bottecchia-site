@@ -61,6 +61,15 @@ def atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> 
     return true_range.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
 
 
+def relative_volume(volume: pd.Series, period: int = 20) -> pd.Series:
+    """Volume relativo: volume do dia dividido pela média de volume dos
+    `period` dias ANTERIORES (não inclui o próprio dia, para não diluir o
+    sinal). >1 significa volume acima do normal (movimento "confirmado"
+    por mais gente negociando); <1, abaixo do normal."""
+    avg_volume = volume.shift(1).rolling(window=period, min_periods=period).mean()
+    return volume / avg_volume.replace(0, float("nan"))
+
+
 def fibonacci_levels(high: pd.Series, low: pd.Series, period: int = 50) -> pd.DataFrame:
     """Níveis de retração de Fibonacci calculados sobre a máxima e a mínima
     dos últimos `period` candles (o "swing" recente). Convenção: retração
