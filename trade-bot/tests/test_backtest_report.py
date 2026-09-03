@@ -1,6 +1,6 @@
 import pandas as pd
 
-from tradebot.backtest import BacktestResult, _max_drawdown_pct, print_report
+from tradebot.backtest import BacktestResult, _max_drawdown_pct, _return_metrics, print_report
 
 
 def test_max_drawdown_pct_basic():
@@ -26,7 +26,20 @@ def _make_result(equity_values, benchmark_values):
         "positions": {},
         "num_fills": 0,
     }
-    return BacktestResult(equity, benchmark, signals, summary)
+    metrics = _return_metrics(equity)
+    metrics.update(
+        {
+            "max_drawdown_pct": _max_drawdown_pct(equity),
+            "profit_factor": 0.0,
+            "num_trades": 0,
+            "time_exposed_pct": 100.0,
+            "turnover": 0.0,
+            "total_fees": 0.0,
+        }
+    )
+    benchmark_metrics = _return_metrics(benchmark)
+    benchmark_metrics["max_drawdown_pct"] = _max_drawdown_pct(benchmark)
+    return BacktestResult(equity, benchmark, signals, summary, metrics, benchmark_metrics)
 
 
 def test_print_report_flags_worse_drawdown_than_benchmark(capsys):

@@ -111,3 +111,33 @@ class Portfolio:
             "positions": {s: p.quantity for s, p in self.positions.items() if p.quantity > 0},
             "num_fills": len(self.fills),
         }
+
+
+def compute_round_trip_pnls(fills: list[Fill]) -> list[float]:
+    """Agrupa os fills em operações completas (posição zerada -> comprada ->
+    zerada de novo) e devolve o resultado líquido (já com taxas) de cada
+    uma. Um "trade" pode conter várias compras seguidas antes de uma única
+    venda que zera a posição."""
+    trades: list[float] = []
+    open_cost = 0.0
+    has_position = False
+    for fill in fills:
+        if fill.side == "BUY":
+            open_cost += fill.notional + fill.fee
+            has_position = True
+        elif fill.side == "SELL" and has_position:
+            proceeds = fill.notional - fill.fee
+            trades.append(proceeds - open_cost)
+            open_cost = 0.0
+            has_position = False
+    return trades
+
+
+def profit_factor(trade_pnls: list[float]) -> float:
+    """Soma dos ganhos dividida pela soma das perdas (em módulo). > 1
+    significa que os ganhos superam as perdas; sem perdas, é infinito."""
+    gains = sum(p for p in trade_pnls if p > 0)
+    losses = -sum(p for p in trade_pnls if p < 0)
+    if losses == 0:
+        return float("inf") if gains > 0 else 0.0
+    return gains / losses
