@@ -15,6 +15,20 @@ confirmar, em vez de esperar o sinal de compra completo da V1 (que exige
 RSI e/ou MACD também alinharem). Nenhum indicador novo, nenhum parâmetro
 novo — é uma mudança estrutural na regra de reentrada, não um ajuste de
 tuning.
+
+RESULTADO: EXPERIMENTO REJEITADO (2021-2023, 11 ativos, antes mesmo de
+chegar a OOS/walk-forward). Critério de aprovação definido a priori:
+retorno melhorar claramente vs V1, Sharpe/Sortino saírem da zona
+negativa, resultado robusto na mediana e nas vitórias (não só na
+média). A V2 não passou em nenhum dos dois pontos centrais: retorno
+piorou na média (só venceu a V1 em 4/11 ativos) e Sharpe/Sortino
+continuaram negativos. Custo extra observado: nº de trades subiu de 6
+para 10 (mediana) e tempo exposto de 36,6% para 46,7% — a reentrada
+mais rápida gerou mais giro sem contrapartida em retorno. Mantido no
+repositório como registro do experimento (resultado negativo também é
+resultado), não como algo a ser usado. A V1 continua sendo a conclusão
+válida desta fase: reduz drawdown de forma robusta, sem vantagem de
+retorno ajustado ao risco.
 """
 
 import logging

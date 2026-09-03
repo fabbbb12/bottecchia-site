@@ -6,6 +6,36 @@
 > Este projeto é independente do site institucional — vive apenas na pasta
 > `trade-bot/` e não afeta o site de forma alguma.
 
+## Conclusão da fase de pesquisa (leia isto primeiro)
+
+Depois de validar a estratégia em 3 períodos isolados, um walk-forward de
+12 anos (6 janelas, 66 combinações janela×ativo) e um experimento de
+reentrada (V2), a caracterização final é:
+
+**A estratégia (V1, congelada em `tradebot/strategy.py`) é um sistema de
+redução de drawdown, não um gerador de retorno superior ao buy-and-hold.**
+
+- **Máx. drawdown: vitória robusta e consistente** — 6/6 janelas do
+  walk-forward, 53/66 combinações janela×ativo. A estratégia perde menos
+  no pior momento, de forma estável ao longo de 12 anos e regimes de
+  mercado diferentes.
+- **Retorno, CAGR, Sharpe, Sortino, Calmar: sem vantagem** — 0-1 das 6
+  janelas, 13-21 das 66 combinações. Não é distorção de outlier (mediana e
+  contagem de vitórias confirmam a mesma coisa que a média).
+- **Experimento V2** (permitir reentrada mais rápida depois de uma venda,
+  em vez de esperar o sinal de compra completo) foi testado e
+  **rejeitado**: não melhorou o retorno de forma clara nem tirou
+  Sharpe/Sortino da zona negativa, e aumentou o giro de operações (mais
+  custo) sem contrapartida. Ver `tradebot/backtest_v2.py` para os
+  detalhes — mantido no repositório como registro do experimento, não
+  como algo a usar.
+
+Ou seja: útil para quem valoriza uma trajetória com menos dor no pior
+momento e aceita abrir mão de retorno para isso; **não é** uma estratégia
+que bate o mercado em retorno ajustado ao risco. Antes de considerar
+paper trading com dinheiro (mesmo simulado) de verdade, essa é a
+expectativa correta a ter sobre o que o bot entrega.
+
 ## O que ele faz
 
 1. **Coleta dados de mercado** públicos via [`yfinance`](https://pypi.org/project/yfinance/)
@@ -112,10 +142,36 @@ python -m tradebot backtest --market all --start 2018-01-01 --end 2020-01-01 --c
 ```
 
 Se a estratégia só performa bem no período usado para ajustar e vai mal
-fora dele, o resultado bom foi coincidência, não capacidade real. O
-próximo passo, mais rigoroso ainda, é *walk-forward* (repetir esse
-processo em várias janelas consecutivas de treino/teste) — ainda não
-implementado aqui, mas é o caminho natural depois de validar out-of-sample.
+fora dele, o resultado bom foi coincidência, não capacidade real.
+
+O passo mais rigoroso é *walk-forward*: repetir esse teste em várias
+janelas sequenciais e não sobrepostas, sem ajustar nenhum parâmetro em
+nenhuma janela (não há etapa de "treino" — a estratégia já está congelada
+antes de rodar):
+
+```bash
+python -m tradebot walkforward --market all --start 2012-01-01 --end 2024-01-01 --window-years 2
+```
+
+O relatório mostra três camadas: por janela, consistência entre janelas
+(em quantas delas a estratégia superou o buy-and-hold, métrica por
+métrica) e o agregado geral com todas as combinações janela×ativo juntas.
+
+## Comparando versões da estratégia (V1 vs V2)
+
+`tradebot/backtest_v2.py` guarda experimentos alternativos que reaproveitam
+o mesmo motor da V1 mas mudam uma única regra por vez (nunca os parâmetros
+já validados). Para comparar lado a lado com o buy-and-hold:
+
+```bash
+python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01
+```
+
+O relatório mostra média, mediana e contagem de vitórias (V2 supera V1, V2
+supera B&H, V1 supera B&H) para cada métrica — critério de aprovação de
+uma V2 nova: precisa melhorar retorno e/ou Sharpe/Sortino de forma clara e
+robusta (mediana + vitórias, não só média) sem piorar muito o drawdown da
+V1, confirmado depois em OOS e walk-forward antes de qualquer uso real.
 
 ## Rodando os testes
 
@@ -132,7 +188,10 @@ trade-bot/
     indicators.py  SMA, EMA, RSI, MACD, Bandas de Bollinger
     strategy.py     Combina indicadores em um sinal (BUY/SELL/HOLD)
     portfolio.py    Carteira simulada (caixa, posições, taxas, slippage)
-    backtest.py     Roda a estratégia sobre histórico e gera relatório
+    backtest.py     V1: roda a estratégia sobre histórico, métricas (Sharpe/
+                    Sortino/Calmar/CAGR/Profit Factor) e relatório
+    backtest_v2.py  Experimentos alternativos (V2 rejeitada) + comparação V1×V2
+    walkforward.py  Roda a estratégia congelada em janelas sequenciais
     live.py         Loop de paper trading com persistência de estado
     charts.py       Gráficos PNG (preço, indicadores, sinais de compra/venda)
     markets.py      Watchlists prontas (EUA, Bovespa) e resolução de símbolos
