@@ -59,3 +59,20 @@ def atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> 
         [high - low, (high - prev_close).abs(), (low - prev_close).abs()], axis=1
     ).max(axis=1)
     return true_range.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
+
+
+def fibonacci_levels(high: pd.Series, low: pd.Series, period: int = 50) -> pd.DataFrame:
+    """Níveis de retração de Fibonacci calculados sobre a máxima e a mínima
+    dos últimos `period` candles (o "swing" recente). Convenção: retração
+    medida a partir da máxima do swing em direção à mínima — a leitura
+    padrão para um recuo (pullback) dentro de uma tendência de alta."""
+    swing_high = high.rolling(window=period, min_periods=period).max()
+    swing_low = low.rolling(window=period, min_periods=period).min()
+    swing_range = swing_high - swing_low
+
+    out = pd.DataFrame(index=high.index)
+    out["swing_high"] = swing_high
+    out["swing_low"] = swing_low
+    for pct, suffix in [(0.236, "236"), (0.382, "382"), (0.5, "500"), (0.618, "618"), (0.786, "786")]:
+        out[f"fib_{suffix}"] = swing_high - swing_range * pct
+    return out

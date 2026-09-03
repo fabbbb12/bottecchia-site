@@ -1,34 +1,28 @@
-"""V2 — experimento de reentrada, isolado da V1.
+"""V3 — experimento de filtro de Fibonacci, isolado da V1.
 
 A V1 (tradebot/strategy.py + tradebot/backtest.py) permanece 100%
-intocada; ela é o benchmark interno congelado. A V2 reaproveita
-integralmente o mesmo sistema de votos (SMA/RSI/MACD/Bollinger) e o
-mesmo stop-loss/trailing-stop da V1 — a ÚNICA diferença é a regra de
-reentrada depois de uma venda.
+intocada; ela é o benchmark interno congelado. A V3 reaproveita
+integralmente o mesmo sistema de votos e o mesmo stop-loss/trailing da
+V1 — a ÚNICA diferença é uma condição extra na ENTRADA: a compra que a
+V1 já geraria só é executada se o preço estiver perto de um nível de
+retração de Fibonacci do swing recente. Saída (stop-loss, trailing) é
+idêntica à V1, sem a regra de reentrada da V2 — é um teste de uma única
+variável por vez.
 
-Hipótese testada: o problema da V1 não é a entrada, é que ela sai para
-se proteger (stop-loss ou trailing) e demora a recomprar — perdendo parte
-da recuperação em ativos que caem e voltam dentro do período (o padrão
-visto em MSFT/NVDA/GOOGL no teste 2021-2023). A V2 permite reentrar assim
-que a tendência de curto prazo (SMA rápida > SMA lenta) voltar a
-confirmar, em vez de esperar o sinal de compra completo da V1 (que exige
-RSI e/ou MACD também alinharem). Nenhum indicador novo, nenhum parâmetro
-novo — é uma mudança estrutural na regra de reentrada, não um ajuste de
-tuning.
+Hipótese testada: comprar apenas quando o preço está numa "zona de
+Fibonacci" (suporte historicamente citado por operadores) filtra
+entradas de pior qualidade que o sistema de votos sozinho aceitaria,
+melhorando o resultado por operação mesmo negociando com menos
+frequência.
 
-RESULTADO: EXPERIMENTO REJEITADO (2021-2023, 11 ativos, antes mesmo de
-chegar a OOS/walk-forward). Critério de aprovação definido a priori:
-retorno melhorar claramente vs V1, Sharpe/Sortino saírem da zona
-negativa, resultado robusto na mediana e nas vitórias (não só na
-média). A V2 não passou em nenhum dos dois pontos centrais: retorno
-piorou na média (só venceu a V1 em 4/11 ativos) e Sharpe/Sortino
-continuaram negativos. Custo extra observado: nº de trades subiu de 6
-para 10 (mediana) e tempo exposto de 36,6% para 46,7% — a reentrada
-mais rápida gerou mais giro sem contrapartida em retorno. Mantido no
-repositório como registro do experimento (resultado negativo também é
-resultado), não como algo a ser usado. A V1 continua sendo a conclusão
-válida desta fase: reduz drawdown de forma robusta, sem vantagem de
-retorno ajustado ao risco.
+Parâmetros CONGELADOS antes de rodar qualquer teste (não ajustados
+depois de ver resultado):
+- Swing: máxima/mínima dos últimos 50 dias (`FIB_PERIOD`).
+- Zona considerada: retrações de 38,2% / 50% / 61,8% — a "zona áurea"
+  clássica (`FIB_LEVELS`). 23,6% e 78,6% ficam de fora por serem mais
+  extremos e menos citados como suporte relevante.
+- Tolerância: preço a até 1,5% de algum desses níveis conta como "na
+  zona" (`FIB_TOLERANCE_PCT`).
 """
 
 import logging
@@ -36,16 +30,31 @@ import logging
 import numpy as np
 import pandas as pd
 
+from tradebot import indicators as ind
 from tradebot.backtest import BacktestResult, _max_drawdown_pct, _return_metrics
 from tradebot.comparison import print_v1_challenger_comparison
 from tradebot.data import fetch_ohlcv
 from tradebot.portfolio import Portfolio, compute_round_trip_pnls, profit_factor
 from tradebot.strategy import StrategyConfig, apply_risk_management, generate_signals
 
-logger = logging.getLogger("tradebot.backtest_v2")
+logger = logging.getLogger("tradebot.backtest_v3")
+
+FIB_PERIOD = 50
+FIB_LEVELS = ("fib_382", "fib_500", "fib_618")
+FIB_TOLERANCE_PCT = 0.015
 
 
-def run_backtest_v2(
+def _near_fib_zone(price: float, fib_row: pd.Series) -> bool:
+    for level_name in FIB_LEVELS:
+        level = fib_row[level_name]
+        if pd.isna(level) or level <= 0:
+            continue
+        if abs(price - level) / level <= FIB_TOLERANCE_PCT:
+            return True
+    return False
+
+
+def run_backtest_v3(
     df: pd.DataFrame,
     symbol: str,
     strategy_cfg: StrategyConfig,
@@ -55,12 +64,13 @@ def run_backtest_v2(
     slippage_rate: float = 0.0005,
 ) -> BacktestResult:
     signals = generate_signals(df, strategy_cfg)  # idêntico à V1, nada mudou aqui
+    fib = ind.fibonacci_levels(df["high"], df["low"], period=FIB_PERIOD)
+    signals = signals.join(fib)
+
     portfolio = Portfolio(starting_cash, fee_rate=fee_rate, slippage_rate=slippage_rate)
 
     equity_curve = []
     exposed_days = []
-    awaiting_reentry = False  # True logo após uma venda, até a V2 recomprar
-
     for timestamp, row in signals.iterrows():
         price = float(row["close"])
         pos = portfolio.position(symbol)
@@ -70,21 +80,17 @@ def run_backtest_v2(
             row["action"], pos.quantity, pos.avg_price, pos.peak_price, price, row["atr"], strategy_cfg
         )
 
-        if pos.quantity == 0 and awaiting_reentry and action != "BUY":
-            # regra exclusiva da V2: dispensa o sinal completo da V1 se a
-            # tendência de curto prazo já confirmou de novo
-            if row["sma_fast"] > row["sma_slow"]:
-                action = "BUY"
+        if action == "BUY" and pos.quantity == 0 and not _near_fib_zone(price, row):
+            # regra exclusiva da V3: só compra se o preço estiver perto de
+            # uma zona de Fibonacci do swing recente
+            action = "HOLD"
 
         if action == "BUY":
             fill = portfolio.buy(timestamp, symbol, price, cash_fraction)
             if fill:
                 pos.peak_price = fill.price
-                awaiting_reentry = False
         elif action == "SELL":
-            fill = portfolio.sell(timestamp, symbol, price, position_fraction=1.0)
-            if fill:
-                awaiting_reentry = True
+            portfolio.sell(timestamp, symbol, price, position_fraction=1.0)
 
         equity_curve.append(portfolio.equity({symbol: price}))
         exposed_days.append(pos.quantity > 0)
@@ -129,7 +135,7 @@ def run_backtest_v2(
     )
 
 
-def run_multi_backtest_v2(
+def run_multi_backtest_v3(
     symbols: list[str],
     strategy_cfg: StrategyConfig,
     period: str = "1y",
@@ -145,7 +151,7 @@ def run_multi_backtest_v2(
     for symbol in symbols:
         try:
             df = fetch_ohlcv(symbol, period=period, interval=interval, start=start, end=end)
-            results[symbol] = run_backtest_v2(
+            results[symbol] = run_backtest_v3(
                 df,
                 symbol,
                 strategy_cfg,
@@ -155,9 +161,9 @@ def run_multi_backtest_v2(
                 slippage_rate=slippage_rate,
             )
         except Exception:
-            logger.exception("Falha ao rodar backtest V2 para %s, pulando", symbol)
+            logger.exception("Falha ao rodar backtest V3 para %s, pulando", symbol)
     return results
 
 
-def print_v1_v2_comparison(v1_results: dict[str, BacktestResult], v2_results: dict[str, BacktestResult]) -> None:
-    print_v1_challenger_comparison(v1_results, v2_results, challenger_label="V2")
+def print_v1_v3_comparison(v1_results: dict[str, BacktestResult], v3_results: dict[str, BacktestResult]) -> None:
+    print_v1_challenger_comparison(v1_results, v3_results, challenger_label="V3")

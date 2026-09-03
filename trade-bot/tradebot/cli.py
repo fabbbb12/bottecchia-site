@@ -6,6 +6,7 @@
     python -m tradebot backtest --market all --start 2018-01-01 --end 2020-01-01  # fora da amostra
     python -m tradebot walkforward --market all --start 2012-01-01 --end 2024-01-01 --window-years 2
     python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01  # V1 vs V2 vs B&H
+    python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --challenger v3  # V1 vs V3 (Fibo)
     python -m tradebot live --symbol PETR4.SA --interval 1d --poll-seconds 3600 --chart
 
 Tudo aqui é PAPER TRADING (simulado). Não há execução de ordens reais.
@@ -16,8 +17,10 @@ import logging
 from pathlib import Path
 
 from tradebot.backtest import print_report, print_summary_table, run_backtest, run_multi_backtest
-from tradebot.backtest_v2 import print_v1_v2_comparison, run_multi_backtest_v2
+from tradebot.backtest_v2 import run_multi_backtest_v2
+from tradebot.backtest_v3 import run_multi_backtest_v3
 from tradebot.charts import plot_signals
+from tradebot.comparison import print_v1_challenger_comparison
 from tradebot.data import fetch_ohlcv
 from tradebot.live import run_loop
 from tradebot.markets import resolve_symbols
@@ -62,7 +65,7 @@ def build_parser() -> argparse.ArgumentParser:
     compare_p = sub.add_parser(
         "compare",
         parents=[common],
-        help="Compara V1 (congelada) vs V2 (experimento de reentrada) vs Buy&Hold no mesmo período",
+        help="Compara V1 (congelada) vs uma versão experimental vs Buy&Hold no mesmo período",
     )
     compare_p.add_argument("--symbol", help="Um único símbolo, ex: AAPL, PETR4.SA")
     compare_p.add_argument("--symbols", help="Lista separada por vírgula, ex: AAPL,MSFT,PETR4.SA")
@@ -70,6 +73,12 @@ def build_parser() -> argparse.ArgumentParser:
     compare_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
     compare_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD)")
     compare_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
+    compare_p.add_argument(
+        "--challenger",
+        choices=["v2", "v3"],
+        default="v2",
+        help="v2 = reentrada antecipada (rejeitada); v3 = filtro de Fibonacci na entrada",
+    )
 
     live_p = sub.add_parser("live", parents=[common], help="Loop de paper trading em quase-tempo-real")
     live_p.add_argument("--symbol", required=True, help="Um único símbolo, ex: AAPL, PETR4.SA")
@@ -162,7 +171,8 @@ def main(argv: list[str] | None = None) -> None:
             starting_cash=args.cash,
             cash_fraction=args.cash_fraction,
         )
-        v2_results = run_multi_backtest_v2(
+        challenger_fn = run_multi_backtest_v2 if args.challenger == "v2" else run_multi_backtest_v3
+        challenger_results = challenger_fn(
             symbols,
             strategy_cfg,
             period=args.period,
@@ -172,7 +182,7 @@ def main(argv: list[str] | None = None) -> None:
             starting_cash=args.cash,
             cash_fraction=args.cash_fraction,
         )
-        print_v1_v2_comparison(v1_results, v2_results)
+        print_v1_challenger_comparison(v1_results, challenger_results, challenger_label=args.challenger.upper())
 
     elif args.command == "live":
         print("AVISO: modo 'live' continua sendo simulado (paper trading). Nenhuma ordem real é enviada.")
