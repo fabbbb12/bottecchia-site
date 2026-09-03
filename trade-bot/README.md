@@ -188,6 +188,40 @@ uma V2 nova: precisa melhorar retorno e/ou Sharpe/Sortino de forma clara e
 robusta (mediana + vitórias, não só média) sem piorar muito o drawdown da
 V1, confirmado depois em OOS e walk-forward antes de qualquer uso real.
 
+## Família B — Trend Following / Breakout (B1)
+
+A família V (V1-V6, acima) testou variações de um sistema de votos com
+reversão à média. A família B testa uma ideia estruturalmente diferente:
+seguir tendência via rompimento de máxima. A B1 (`tradebot/backtest_b1.py`)
+é a primeira e única hipótese dessa família implementada até agora:
+
+- Entrada: `close[t] > highest_high_N[t]` (máxima das máximas dos `N`
+  candles ANTERIORES, `N = 20` congelado), execução no open de `t+1`.
+- Saída: stop inicial `entrada - 2×ATR` e trailing `pico de fechamento -
+  3×ATR` (o maior dos dois vale a cada dia), violação decidida no
+  fechamento de `t`, execução no open de `t+1`. Nunca se usa o
+  high/low do próprio candle da decisão para executar no mesmo candle.
+- Sem RSI, MACD, Bollinger, Fibonacci, Volume ou qualquer outro filtro —
+  ATR só é usado para stop, nunca como filtro de entrada.
+- Mesmo sizing, custos e universo (US_WATCHLIST + BR_WATCHLIST) da V1.
+
+```bash
+python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --challenger b1
+python -m tradebot walkforward --market all --start 2012-01-01 --end 2024-01-01 --window-years 2 --challenger b1
+```
+
+Teste de sensibilidade (rodar DEPOIS do resultado principal, reportar os
+três valores lado a lado, nunca escolher o melhor depois de ver o
+resultado):
+
+```bash
+python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --challenger b1 --breakout-period 10
+python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --challenger b1 --breakout-period 20
+python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --challenger b1 --breakout-period 40
+```
+
+Resultado: em aberto — ainda não foi rodado contra dados reais.
+
 ## Rodando os testes
 
 ```bash
@@ -206,7 +240,8 @@ trade-bot/
     backtest.py     V1: roda a estratégia sobre histórico, métricas (Sharpe/
                     Sortino/Calmar/CAGR/Profit Factor) e relatório
     backtest_v2.py  Experimentos alternativos (V2 rejeitada) + comparação V1×V2
-    walkforward.py  Roda a estratégia congelada em janelas sequenciais
+    backtest_b1.py  Família B: B1, rompimento puro (trend following)
+    walkforward.py  Roda a estratégia congelada em janelas sequenciais (V1 ou outra, via backtest_fn)
     live.py         Loop de paper trading com persistência de estado
     charts.py       Gráficos PNG (preço, indicadores, sinais de compra/venda)
     markets.py      Watchlists prontas (EUA, Bovespa) e resolução de símbolos

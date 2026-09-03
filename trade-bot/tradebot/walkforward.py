@@ -13,6 +13,7 @@ coincidência de um período específico.
 import logging
 import statistics
 from dataclasses import dataclass, field
+from typing import Callable
 
 import pandas as pd
 
@@ -59,13 +60,24 @@ def run_walk_forward(
     cash_fraction: float = 0.5,
     fee_rate: float = 0.001,
     slippage_rate: float = 0.0005,
+    backtest_fn: Callable[..., dict[str, BacktestResult]] = run_multi_backtest,
+    backtest_kwargs: dict | None = None,
 ) -> WalkForwardResult:
+    """`backtest_fn` roda por padrão a V1 congelada (`run_multi_backtest`),
+    mantendo compatibilidade com todo código existente. Para rodar
+    walk-forward de uma versão/família diferente (ex: B1), passe a
+    `run_multi_backtest_*` correspondente — ela só precisa aceitar
+    `(symbols, strategy_cfg, interval=, start=, end=, starting_cash=,
+    cash_fraction=, fee_rate=, slippage_rate=, **backtest_kwargs)`, mesmo
+    que `strategy_cfg` não seja usado. Nenhum parâmetro é recalibrado por
+    janela aqui — a estratégia já chega congelada."""
     windows = generate_windows(start, end, window_years)
     window_results: dict[str, dict[str, BacktestResult]] = {}
+    extra_kwargs = backtest_kwargs or {}
 
     for w_start, w_end in windows:
         label = f"{w_start} a {w_end}"
-        results = run_multi_backtest(
+        results = backtest_fn(
             symbols,
             strategy_cfg,
             interval=interval,
@@ -75,6 +87,7 @@ def run_walk_forward(
             cash_fraction=cash_fraction,
             fee_rate=fee_rate,
             slippage_rate=slippage_rate,
+            **extra_kwargs,
         )
         if not results:
             logger.warning("Janela %s ficou sem nenhum resultado (todos os símbolos falharam), pulando", label)

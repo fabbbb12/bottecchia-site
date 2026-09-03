@@ -18,6 +18,7 @@ import logging
 from pathlib import Path
 
 from tradebot.backtest import print_report, print_summary_table, run_backtest, run_multi_backtest
+from tradebot.backtest_b1 import BREAKOUT_PERIOD, run_multi_backtest_b1
 from tradebot.backtest_v2 import run_multi_backtest_v2
 from tradebot.backtest_v3 import run_multi_backtest_v3
 from tradebot.backtest_v4 import run_multi_backtest_v4
@@ -65,6 +66,18 @@ def build_parser() -> argparse.ArgumentParser:
     wf_p.add_argument("--start", required=True, help="Início do período total (AAAA-MM-DD)")
     wf_p.add_argument("--end", required=True, help="Fim do período total (AAAA-MM-DD)")
     wf_p.add_argument("--window-years", type=float, default=2.0, help="Tamanho de cada janela, em anos")
+    wf_p.add_argument(
+        "--challenger",
+        choices=["v2", "v3", "v4", "v5", "v6", "b1"],
+        default=None,
+        help="Opcional: também roda o walk-forward dessa versão/família, além da V1 (relatórios separados)",
+    )
+    wf_p.add_argument(
+        "--breakout-period",
+        type=int,
+        default=BREAKOUT_PERIOD,
+        help="Só usado com --challenger b1: janela do rompimento (padrão 20; teste de sensibilidade usa 10/20/40)",
+    )
 
     compare_p = sub.add_parser(
         "compare",
@@ -79,13 +92,19 @@ def build_parser() -> argparse.ArgumentParser:
     compare_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
     compare_p.add_argument(
         "--challenger",
-        choices=["v2", "v3", "v4", "v5", "v6"],
+        choices=["v2", "v3", "v4", "v5", "v6", "b1"],
         default="v2",
         help=(
             "v2 = reentrada antecipada (rejeitada); v3 = filtro de Fibonacci (rejeitada); "
             "v4 = placebo aleatório; v5 = Fibonacci como position sizing (rejeitada); "
-            "v6 = filtro de Volume Relativo"
+            "v6 = filtro de Volume Relativo; b1 = rompimento puro (família B, trend following)"
         ),
+    )
+    compare_p.add_argument(
+        "--breakout-period",
+        type=int,
+        default=BREAKOUT_PERIOD,
+        help="Só usado com --challenger b1: janela do rompimento (padrão 20; teste de sensibilidade usa 10/20/40)",
     )
 
     placebo_p = sub.add_parser(
@@ -172,7 +191,37 @@ def main(argv: list[str] | None = None) -> None:
             starting_cash=args.cash,
             cash_fraction=args.cash_fraction,
         )
+        print("\n" + "#" * 78)
+        print("# V1 (congelada)")
+        print("#" * 78)
         print_walk_forward_report(wf)
+
+        if args.challenger:
+            challenger_fns = {
+                "v2": run_multi_backtest_v2,
+                "v3": run_multi_backtest_v3,
+                "v4": run_multi_backtest_v4,
+                "v5": run_multi_backtest_v5,
+                "v6": run_multi_backtest_v6,
+                "b1": run_multi_backtest_b1,
+            }
+            challenger_kwargs = {"breakout_period": args.breakout_period} if args.challenger == "b1" else None
+            wf_challenger = run_walk_forward(
+                symbols,
+                strategy_cfg,
+                start=args.start,
+                end=args.end,
+                window_years=args.window_years,
+                interval=args.interval,
+                starting_cash=args.cash,
+                cash_fraction=args.cash_fraction,
+                backtest_fn=challenger_fns[args.challenger],
+                backtest_kwargs=challenger_kwargs,
+            )
+            print("\n" + "#" * 78)
+            print(f"# {args.challenger.upper()}")
+            print("#" * 78)
+            print_walk_forward_report(wf_challenger)
 
     elif args.command == "compare":
         symbols = resolve_symbols(args.market, args.symbols)
@@ -197,8 +246,10 @@ def main(argv: list[str] | None = None) -> None:
             "v4": run_multi_backtest_v4,
             "v5": run_multi_backtest_v5,
             "v6": run_multi_backtest_v6,
+            "b1": run_multi_backtest_b1,
         }
         challenger_fn = challenger_fns[args.challenger]
+        extra_kwargs = {"breakout_period": args.breakout_period} if args.challenger == "b1" else {}
         challenger_results = challenger_fn(
             symbols,
             strategy_cfg,
@@ -208,6 +259,7 @@ def main(argv: list[str] | None = None) -> None:
             end=args.end,
             starting_cash=args.cash,
             cash_fraction=args.cash_fraction,
+            **extra_kwargs,
         )
         print_v1_challenger_comparison(v1_results, challenger_results, challenger_label=args.challenger.upper())
 
