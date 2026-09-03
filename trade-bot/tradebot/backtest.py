@@ -77,6 +77,7 @@ def _max_drawdown_pct(equity: pd.Series) -> float:
 def print_report(result: BacktestResult, symbol: str) -> None:
     s = result.final_summary
     max_drawdown = _max_drawdown_pct(result.equity_curve)
+    bench_max_drawdown = _max_drawdown_pct(result.benchmark_curve)
 
     bench_start = result.benchmark_curve.iloc[0]
     bench_end = result.benchmark_curve.iloc[-1]
@@ -86,13 +87,18 @@ def print_report(result: BacktestResult, symbol: str) -> None:
     print(f"Caixa final:        {s['cash']:.2f}")
     print(f"Patrimônio final:    {s['equity']:.2f}")
     print(f"Resultado (PnL):     {s['pnl']:.2f} ({s['pnl_pct']:.2f}%)")
-    print(f"Máx. drawdown:       {max_drawdown:.2f}%")
+    print(f"Máx. drawdown (estratégia): {max_drawdown:.2f}%")
+    print(f"Máx. drawdown (buy-and-hold): {bench_max_drawdown:.2f}%")
     print(f"Ordens executadas:   {s['num_fills']}")
     print(f"Posições em aberto:  {s['positions']}")
     print(f"Buy-and-hold no período: {bench_pnl_pct:.2f}% (comprar e segurar, sem estratégia)")
     diff = s["pnl_pct"] - bench_pnl_pct
     comparativo = "supera" if diff > 0 else "fica atrás d" if diff < 0 else "empata com"
     print(f"=> Estratégia {comparativo}o buy-and-hold em {diff:+.2f} pontos percentuais")
+    # ambos são negativos (ex: -13.88); "menos negativo" = queda menor = melhor proteção
+    dd_diff = max_drawdown - bench_max_drawdown
+    protecao = "protegeu capital melhor" if dd_diff > 0 else "teve queda pior" if dd_diff < 0 else "teve a mesma queda"
+    print(f"=> No pior momento, a estratégia {protecao} que o buy-and-hold em {abs(dd_diff):.2f} pontos percentuais")
 
 
 def run_multi_backtest(
@@ -135,16 +141,20 @@ def print_summary_table(results: dict[str, BacktestResult]) -> None:
         return
 
     print("\n=== Resumo comparativo (SIMULADO / PAPER) ===")
-    header = f"{'Símbolo':<12}{'PnL':>12}{'PnL %':>10}{'Buy&Hold %':>12}{'Máx DD %':>12}{'Ordens':>9}"
+    header = (
+        f"{'Símbolo':<12}{'PnL':>12}{'PnL %':>10}{'Buy&Hold %':>12}"
+        f"{'Máx DD':>10}{'DD B&H':>10}{'Ordens':>9}"
+    )
     print(header)
     print("-" * len(header))
     for symbol, result in results.items():
         s = result.final_summary
         max_dd = _max_drawdown_pct(result.equity_curve)
+        bench_max_dd = _max_drawdown_pct(result.benchmark_curve)
         bench_start = result.benchmark_curve.iloc[0]
         bench_end = result.benchmark_curve.iloc[-1]
         bench_pnl_pct = (bench_end - bench_start) / bench_start * 100
         print(
             f"{symbol:<12}{s['pnl']:>12.2f}{s['pnl_pct']:>9.2f}%{bench_pnl_pct:>11.2f}%"
-            f"{max_dd:>11.2f}%{s['num_fills']:>9}"
+            f"{max_dd:>9.2f}%{bench_max_dd:>9.2f}%{s['num_fills']:>9}"
         )
