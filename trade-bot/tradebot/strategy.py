@@ -28,8 +28,10 @@ class StrategyConfig:
     weights: dict = field(
         default_factory=lambda: {"trend": 1.0, "rsi": 1.0, "macd": 1.0, "bollinger": 0.5}
     )
-    buy_threshold: float = 1.5
-    sell_threshold: float = -1.5
+    buy_threshold: float = 2.0
+    sell_threshold: float = -2.0
+    stop_loss_pct: float = 0.06
+    take_profit_pct: float = 0.15
 
 
 def compute_indicators(df: pd.DataFrame, cfg: StrategyConfig) -> pd.DataFrame:
@@ -107,6 +109,19 @@ def decide_action(score: float, cfg: StrategyConfig) -> str:
     if score <= cfg.sell_threshold:
         return "SELL"
     return "HOLD"
+
+
+def apply_risk_management(
+    action: str, position_qty: float, position_avg_price: float, current_price: float, cfg: StrategyConfig
+) -> str:
+    """Força uma venda quando a posição aberta atinge o stop-loss ou o
+    take-profit, independentemente do que o score dos indicadores diga —
+    protege contra segurar uma perda grande esperando o indicador virar."""
+    if position_qty > 0 and position_avg_price > 0:
+        change = (current_price - position_avg_price) / position_avg_price
+        if change <= -cfg.stop_loss_pct or change >= cfg.take_profit_pct:
+            return "SELL"
+    return action
 
 
 def generate_signals(df: pd.DataFrame, cfg: StrategyConfig) -> pd.DataFrame:

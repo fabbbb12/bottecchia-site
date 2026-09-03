@@ -1,9 +1,9 @@
 """Interface de linha de comando do bot.
 
-    python -m tradebot backtest --symbol AAPL --period 1y --interval 1d
+    python -m tradebot backtest --symbol AAPL --period 1y --interval 1d --chart
     python -m tradebot backtest --market br --period 1y
     python -m tradebot backtest --market all --period 1y
-    python -m tradebot live --symbol PETR4.SA --interval 1d --poll-seconds 3600
+    python -m tradebot live --symbol PETR4.SA --interval 1d --poll-seconds 3600 --chart
 
 Tudo aqui é PAPER TRADING (simulado). Não há execução de ordens reais.
 """
@@ -13,6 +13,7 @@ import logging
 from pathlib import Path
 
 from tradebot.backtest import print_report, print_summary_table, run_backtest, run_multi_backtest
+from tradebot.charts import plot_signals
 from tradebot.data import fetch_ohlcv
 from tradebot.live import run_loop
 from tradebot.markets import resolve_symbols
@@ -30,6 +31,8 @@ def build_parser() -> argparse.ArgumentParser:
     common.add_argument("--cash", type=float, default=10_000.0, help="Caixa inicial simulado")
     common.add_argument("--cash-fraction", type=float, default=0.5, help="Fração do caixa usada em cada compra")
     common.add_argument("--interval", default="1d", help="Ex: 1m, 5m, 1h, 1d")
+    common.add_argument("--chart", action="store_true", help="Salva gráfico(s) PNG com preço, indicadores e sinais")
+    common.add_argument("--chart-dir", default="charts", help="Pasta onde salvar os gráficos")
 
     backtest_p = sub.add_parser("backtest", parents=[common], help="Roda a estratégia sobre dados históricos")
     backtest_p.add_argument("--symbol", help="Um único símbolo, ex: AAPL, PETR4.SA")
@@ -60,6 +63,8 @@ def main(argv: list[str] | None = None) -> None:
         if not symbols:
             parser.error("informe --symbol, --symbols ou --market (us/br/all)")
 
+        chart_dir = Path(args.chart_dir) if args.chart else None
+
         if len(symbols) == 1:
             df = fetch_ohlcv(symbols[0], period=args.period, interval=args.interval)
             result = run_backtest(
@@ -70,6 +75,9 @@ def main(argv: list[str] | None = None) -> None:
                 cash_fraction=args.cash_fraction,
             )
             print_report(result, symbols[0])
+            if chart_dir is not None:
+                path = plot_signals(result.signals, symbols[0], chart_dir / f"{symbols[0]}.png", title_suffix="backtest")
+                print(f"Gráfico salvo em: {path}")
         else:
             results = run_multi_backtest(
                 symbols,
@@ -80,6 +88,10 @@ def main(argv: list[str] | None = None) -> None:
                 cash_fraction=args.cash_fraction,
             )
             print_summary_table(results)
+            if chart_dir is not None:
+                for symbol, result in results.items():
+                    path = plot_signals(result.signals, symbol, chart_dir / f"{symbol}.png", title_suffix="backtest")
+                    print(f"Gráfico salvo em: {path}")
 
     elif args.command == "live":
         print("AVISO: modo 'live' continua sendo simulado (paper trading). Nenhuma ordem real é enviada.")
@@ -93,6 +105,7 @@ def main(argv: list[str] | None = None) -> None:
             poll_seconds=args.poll_seconds,
             state_dir=Path(args.state_dir),
             max_iterations=args.iterations,
+            chart_dir=Path(args.chart_dir) if args.chart else None,
         )
 
 

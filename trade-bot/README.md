@@ -22,11 +22,22 @@
    ou `HOLD`. Isso evita depender de um único indicador isolado.
 3. **"Executa"** a decisão em uma carteira simulada (`Portfolio`): desconta
    taxa e slippage, atualiza caixa/posição e guarda o histórico de ordens.
+   Além do sinal dos indicadores, há **stop-loss e take-profit** por posição
+   (`StrategyConfig.stop_loss_pct` / `take_profit_pct`): a posição é
+   liquidada automaticamente se a perda ou o ganho ultrapassar esses
+   limites, mesmo que o score dos indicadores ainda não tenha virado.
 4. Pode rodar em dois modos:
-   - `backtest`: aplica a estratégia sobre um histórico e mostra o resultado.
+   - `backtest`: aplica a estratégia sobre um histórico, mostra o resultado
+     e compara contra **buy-and-hold** (comprar e segurar o ativo sem
+     estratégia nenhuma) no mesmo período — se a estratégia não superar o
+     buy-and-hold, ela não está agregando valor.
    - `live`: repete o ciclo (buscar preço → decidir → simular ordem) em
      intervalos configuráveis, salvando o estado da carteira em disco entre
      execuções — ainda 100% simulado.
+5. **Gera gráficos** (`--chart`) com preço, médias móveis, Bandas de
+   Bollinger, RSI e MACD, com marcadores de compra/venda sobre o preço —
+   tanto no backtest quanto no modo `live` (nesse caso, o arquivo é
+   sobrescrito a cada ciclo, funcionando como um acompanhamento "ao vivo").
 
 ## Instalação
 
@@ -64,11 +75,20 @@ Ou uma lista própria de símbolos, separada por vírgula:
 python -m tradebot backtest --symbols AAPL,MSFT,PETR4.SA,VALE3.SA --period 1y
 ```
 
-Modo "ao vivo" simulado — ainda um único símbolo por vez (verifica a cada
-hora, salva estado em `state/`):
+Adicione `--chart` a qualquer um dos comandos acima para salvar gráficos PNG
+em `charts/` (um por símbolo), com preço, médias, Bollinger, RSI, MACD e
+marcadores de compra/venda:
 
 ```bash
-python -m tradebot live --symbol PETR4.SA --interval 1d --poll-seconds 3600
+python -m tradebot backtest --symbol AAPL --period 1y --chart
+```
+
+Modo "ao vivo" simulado — ainda um único símbolo por vez (verifica a cada
+hora, salva estado em `state/`, e com `--chart` atualiza o gráfico a cada
+ciclo — basta manter o arquivo aberto num visualizador de imagens):
+
+```bash
+python -m tradebot live --symbol PETR4.SA --interval 1d --poll-seconds 3600 --chart
 ```
 
 Use `--iterations N` no modo `live` para limitar o número de ciclos (útil
@@ -91,6 +111,8 @@ trade-bot/
     portfolio.py    Carteira simulada (caixa, posições, taxas, slippage)
     backtest.py     Roda a estratégia sobre histórico e gera relatório
     live.py         Loop de paper trading com persistência de estado
+    charts.py       Gráficos PNG (preço, indicadores, sinais de compra/venda)
+    markets.py      Watchlists prontas (EUA, Bovespa) e resolução de símbolos
     cli.py          Interface de linha de comando
   tests/            Testes unitários (indicadores, estratégia, carteira)
 ```
