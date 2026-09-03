@@ -1,12 +1,16 @@
 """Backtest: roda a estratégia sobre dados históricos e mede o desempenho
 da carteira simulada, sem nenhuma conexão com corretora real."""
 
+import logging
 from dataclasses import dataclass
 
 import pandas as pd
 
+from tradebot.data import fetch_ohlcv
 from tradebot.portfolio import Portfolio
 from tradebot.strategy import StrategyConfig, generate_signals
+
+logger = logging.getLogger("tradebot.backtest")
 
 
 @dataclass
@@ -59,3 +63,53 @@ def print_report(result: BacktestResult, symbol: str) -> None:
     print(f"Máx. drawdown:       {max_drawdown:.2f}%")
     print(f"Ordens executadas:   {s['num_fills']}")
     print(f"Posições em aberto:  {s['positions']}")
+
+
+def run_multi_backtest(
+    symbols: list[str],
+    strategy_cfg: StrategyConfig,
+    period: str = "1y",
+    interval: str = "1d",
+    starting_cash: float = 10_000.0,
+    cash_fraction: float = 0.5,
+    fee_rate: float = 0.001,
+    slippage_rate: float = 0.0005,
+) -> dict[str, BacktestResult]:
+    """Roda o backtest para vários símbolos (cada um com sua própria carteira
+    isolada) e devolve um dicionário {símbolo: resultado}. Símbolos que
+    falharem ao baixar dados são pulados com um aviso, sem interromper os
+    demais."""
+    results: dict[str, BacktestResult] = {}
+    for symbol in symbols:
+        try:
+            df = fetch_ohlcv(symbol, period=period, interval=interval)
+            results[symbol] = run_backtest(
+                df,
+                symbol,
+                strategy_cfg,
+                starting_cash=starting_cash,
+                cash_fraction=cash_fraction,
+                fee_rate=fee_rate,
+                slippage_rate=slippage_rate,
+            )
+        except Exception:
+            logger.exception("Falha ao rodar backtest para %s, pulando", symbol)
+    return results
+
+
+def print_summary_table(results: dict[str, BacktestResult]) -> None:
+    if not results:
+        print("Nenhum resultado para exibir.")
+        return
+
+    print("\n=== Resumo comparativo (SIMULADO / PAPER) ===")
+    header = f"{'Símbolo':<12}{'PnL':>12}{'PnL %':>10}{'Máx DD %':>12}{'Ordens':>9}"
+    print(header)
+    print("-" * len(header))
+    for symbol, result in results.items():
+        s = result.final_summary
+        equity = result.equity_curve
+        max_dd = ((equity / equity.cummax()) - 1).min() * 100 if len(equity) else 0.0
+        print(
+            f"{symbol:<12}{s['pnl']:>12.2f}{s['pnl_pct']:>9.2f}%{max_dd:>11.2f}%{s['num_fills']:>9}"
+        )

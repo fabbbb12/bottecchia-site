@@ -38,16 +38,37 @@ pip install -r requirements.txt
 
 ## Uso
 
-Backtest (histórico de 1 ano, candles diários):
+O foco atual é **swing trade em ações (EUA e Bovespa)**, com candles diários
+— dados mais estáveis e confiáveis para backtest do que cripto (24/7, sem
+circuit breaker) ou intraday (histórico curto e de qualidade inferior no
+`yfinance`).
+
+Backtest de um único ativo (histórico de 1 ano, candles diários):
 
 ```bash
-python -m tradebot backtest --symbol BTC-USD --period 1y --interval 1d --cash 10000
+python -m tradebot backtest --symbol AAPL --period 1y --interval 1d --cash 10000
+python -m tradebot backtest --symbol PETR4.SA --period 1y --interval 1d
 ```
 
-Modo "ao vivo" simulado (verifica a cada hora, salva estado em `state/`):
+Backtest comparativo usando as watchlists prontas (EUA, Bovespa ou ambas):
 
 ```bash
-python -m tradebot live --symbol BTC-USD --interval 1h --poll-seconds 3600
+python -m tradebot backtest --market us --period 1y
+python -m tradebot backtest --market br --period 1y
+python -m tradebot backtest --market all --period 1y
+```
+
+Ou uma lista própria de símbolos, separada por vírgula:
+
+```bash
+python -m tradebot backtest --symbols AAPL,MSFT,PETR4.SA,VALE3.SA --period 1y
+```
+
+Modo "ao vivo" simulado — ainda um único símbolo por vez (verifica a cada
+hora, salva estado em `state/`):
+
+```bash
+python -m tradebot live --symbol PETR4.SA --interval 1d --poll-seconds 3600
 ```
 
 Use `--iterations N` no modo `live` para limitar o número de ciclos (útil

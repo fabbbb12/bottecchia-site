@@ -1,7 +1,9 @@
 """Interface de linha de comando do bot.
 
-    python -m tradebot backtest --symbol BTC-USD --period 1y --interval 1d
-    python -m tradebot live --symbol BTC-USD --interval 1h --poll-seconds 3600
+    python -m tradebot backtest --symbol AAPL --period 1y --interval 1d
+    python -m tradebot backtest --market br --period 1y
+    python -m tradebot backtest --market all --period 1y
+    python -m tradebot live --symbol PETR4.SA --interval 1d --poll-seconds 3600
 
 Tudo aqui é PAPER TRADING (simulado). Não há execução de ordens reais.
 """
@@ -10,9 +12,10 @@ import argparse
 import logging
 from pathlib import Path
 
-from tradebot.backtest import print_report, run_backtest
+from tradebot.backtest import print_report, print_summary_table, run_backtest, run_multi_backtest
 from tradebot.data import fetch_ohlcv
 from tradebot.live import run_loop
+from tradebot.markets import resolve_symbols
 from tradebot.strategy import StrategyConfig
 
 
@@ -24,15 +27,18 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--symbol", required=True, help="Ex: BTC-USD, PETR4.SA, AAPL")
     common.add_argument("--cash", type=float, default=10_000.0, help="Caixa inicial simulado")
     common.add_argument("--cash-fraction", type=float, default=0.5, help="Fração do caixa usada em cada compra")
     common.add_argument("--interval", default="1d", help="Ex: 1m, 5m, 1h, 1d")
 
     backtest_p = sub.add_parser("backtest", parents=[common], help="Roda a estratégia sobre dados históricos")
+    backtest_p.add_argument("--symbol", help="Um único símbolo, ex: AAPL, PETR4.SA")
+    backtest_p.add_argument("--symbols", help="Lista separada por vírgula, ex: AAPL,MSFT,PETR4.SA")
+    backtest_p.add_argument("--market", choices=["us", "br", "all"], help="Usa uma watchlist pronta (EUA, Bovespa ou ambas)")
     backtest_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y")
 
     live_p = sub.add_parser("live", parents=[common], help="Loop de paper trading em quase-tempo-real")
+    live_p.add_argument("--symbol", required=True, help="Um único símbolo, ex: AAPL, PETR4.SA")
     live_p.add_argument("--period", default="6mo", help="Janela de histórico usada para calcular indicadores")
     live_p.add_argument("--poll-seconds", type=int, default=3600, help="Intervalo entre checagens")
     live_p.add_argument("--iterations", type=int, default=None, help="Limite de ciclos (útil para testes)")
@@ -48,15 +54,32 @@ def main(argv: list[str] | None = None) -> None:
     strategy_cfg = StrategyConfig()
 
     if args.command == "backtest":
-        df = fetch_ohlcv(args.symbol, period=args.period, interval=args.interval)
-        result = run_backtest(
-            df,
-            args.symbol,
-            strategy_cfg,
-            starting_cash=args.cash,
-            cash_fraction=args.cash_fraction,
-        )
-        print_report(result, args.symbol)
+        symbols = resolve_symbols(args.market, args.symbols)
+        if args.symbol:
+            symbols = [args.symbol] + [s for s in symbols if s != args.symbol]
+        if not symbols:
+            parser.error("informe --symbol, --symbols ou --market (us/br/all)")
+
+        if len(symbols) == 1:
+            df = fetch_ohlcv(symbols[0], period=args.period, interval=args.interval)
+            result = run_backtest(
+                df,
+                symbols[0],
+                strategy_cfg,
+                starting_cash=args.cash,
+                cash_fraction=args.cash_fraction,
+            )
+            print_report(result, symbols[0])
+        else:
+            results = run_multi_backtest(
+                symbols,
+                strategy_cfg,
+                period=args.period,
+                interval=args.interval,
+                starting_cash=args.cash,
+                cash_fraction=args.cash_fraction,
+            )
+            print_summary_table(results)
 
     elif args.command == "live":
         print("AVISO: modo 'live' continua sendo simulado (paper trading). Nenhuma ordem real é enviada.")
