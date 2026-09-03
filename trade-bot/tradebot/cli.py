@@ -4,6 +4,7 @@
     python -m tradebot backtest --market br --period 1y
     python -m tradebot backtest --market all --period 1y
     python -m tradebot backtest --market all --start 2018-01-01 --end 2020-01-01  # fora da amostra
+    python -m tradebot walkforward --market all --start 2012-01-01 --end 2024-01-01 --window-years 2
     python -m tradebot live --symbol PETR4.SA --interval 1d --poll-seconds 3600 --chart
 
 Tudo aqui é PAPER TRADING (simulado). Não há execução de ordens reais.
@@ -19,6 +20,7 @@ from tradebot.data import fetch_ohlcv
 from tradebot.live import run_loop
 from tradebot.markets import resolve_symbols
 from tradebot.strategy import StrategyConfig
+from tradebot.walkforward import print_walk_forward_report, run_walk_forward
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -42,6 +44,18 @@ def build_parser() -> argparse.ArgumentParser:
     backtest_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
     backtest_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD) — use para testes fora da amostra")
     backtest_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional — padrão é hoje")
+
+    wf_p = sub.add_parser(
+        "walkforward",
+        parents=[common],
+        help="Roda a estratégia congelada em várias janelas de tempo sequenciais (sem ajustar parâmetros)",
+    )
+    wf_p.add_argument("--symbol", help="Um único símbolo, ex: AAPL, PETR4.SA")
+    wf_p.add_argument("--symbols", help="Lista separada por vírgula, ex: AAPL,MSFT,PETR4.SA")
+    wf_p.add_argument("--market", choices=["us", "br", "all"], help="Usa uma watchlist pronta (EUA, Bovespa ou ambas)")
+    wf_p.add_argument("--start", required=True, help="Início do período total (AAAA-MM-DD)")
+    wf_p.add_argument("--end", required=True, help="Fim do período total (AAAA-MM-DD)")
+    wf_p.add_argument("--window-years", type=float, default=2.0, help="Tamanho de cada janela, em anos")
 
     live_p = sub.add_parser("live", parents=[common], help="Loop de paper trading em quase-tempo-real")
     live_p.add_argument("--symbol", required=True, help="Um único símbolo, ex: AAPL, PETR4.SA")
@@ -97,6 +111,25 @@ def main(argv: list[str] | None = None) -> None:
                 for symbol, result in results.items():
                     path = plot_signals(result.signals, symbol, chart_dir / f"{symbol}.png", title_suffix="backtest")
                     print(f"Gráfico salvo em: {path}")
+
+    elif args.command == "walkforward":
+        symbols = resolve_symbols(args.market, args.symbols)
+        if args.symbol:
+            symbols = [args.symbol] + [s for s in symbols if s != args.symbol]
+        if not symbols:
+            parser.error("informe --symbol, --symbols ou --market (us/br/all)")
+
+        wf = run_walk_forward(
+            symbols,
+            strategy_cfg,
+            start=args.start,
+            end=args.end,
+            window_years=args.window_years,
+            interval=args.interval,
+            starting_cash=args.cash,
+            cash_fraction=args.cash_fraction,
+        )
+        print_walk_forward_report(wf)
 
     elif args.command == "live":
         print("AVISO: modo 'live' continua sendo simulado (paper trading). Nenhuma ordem real é enviada.")

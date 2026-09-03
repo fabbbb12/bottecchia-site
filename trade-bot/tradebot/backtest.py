@@ -252,23 +252,18 @@ def print_summary_table(results: dict[str, BacktestResult]) -> None:
     print_aggregate_comparison(results)
 
 
-def print_aggregate_comparison(results: dict[str, BacktestResult]) -> None:
-    """Estatísticas das métricas em todos os símbolos, estratégia vs
-    buy-and-hold: média, mediana e nº de ativos em que a estratégia supera o
-    buy-and-hold em cada métrica. A mediana e a contagem de vitórias importam
-    porque a média sozinha pode ser dominada por 1-2 ativos com resultado
-    muito fora da curva (ex: um único ativo com alta forte no período)."""
-    if not results:
-        return
-
-    n = len(results)
+def build_metric_pairs(results: dict[str, BacktestResult]) -> list[tuple[str, list[float], list[float]]]:
+    """Para cada métrica (Retorno/CAGR/Máx. drawdown/Sharpe/Sortino/Calmar),
+    devolve a lista de valores da estratégia e do buy-and-hold — um valor por
+    resultado em `results` (pode ser um ativo, ou um par ativo+janela no
+    walk-forward). Reaproveitado tanto no agregado por ativo quanto no
+    agregado por janela do walk-forward."""
     pnl_pcts = [r.final_summary["pnl_pct"] for r in results.values()]
     bench_pnl_pcts = [
         (r.benchmark_curve.iloc[-1] - r.benchmark_curve.iloc[0]) / r.benchmark_curve.iloc[0] * 100
         for r in results.values()
     ]
-
-    metric_pairs: list[tuple[str, list[float], list[float]]] = [
+    return [
         ("Retorno", pnl_pcts, bench_pnl_pcts),
         (
             "CAGR",
@@ -297,7 +292,20 @@ def print_aggregate_comparison(results: dict[str, BacktestResult]) -> None:
         ),
     ]
 
-    print(f"\n=== Estratégia vs Buy&Hold entre {n} ativos (média, mediana, vitórias) ===")
+
+def print_aggregate_comparison(results: dict[str, BacktestResult], label: str = "ativos") -> None:
+    """Estatísticas das métricas em todos os resultados, estratégia vs
+    buy-and-hold: média, mediana e nº de casos em que a estratégia supera o
+    buy-and-hold em cada métrica. A mediana e a contagem de vitórias importam
+    porque a média sozinha pode ser dominada por 1-2 casos com resultado
+    muito fora da curva (ex: um único ativo com alta forte no período)."""
+    if not results:
+        return
+
+    n = len(results)
+    metric_pairs = build_metric_pairs(results)
+
+    print(f"\n=== Estratégia vs Buy&Hold entre {n} {label} (média, mediana, vitórias) ===")
     header = (
         f"{'Métrica':<15}{'Média Estr':>12}{'Média B&H':>12}{'Dif. média':>12}"
         f"{'Med. Estr':>12}{'Med. B&H':>12}{'Vitórias':>10}"
