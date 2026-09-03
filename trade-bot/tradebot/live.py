@@ -63,7 +63,9 @@ def run_once(
     pos = portfolio.position(symbol)
     if pos.quantity > 0:
         pos.peak_price = max(pos.peak_price, price)
-    action = apply_risk_management(last["action"], pos.quantity, pos.avg_price, pos.peak_price, price, strategy_cfg)
+    action = apply_risk_management(
+        last["action"], pos.quantity, pos.avg_price, pos.peak_price, price, last["atr"], strategy_cfg
+    )
 
     fill = None
     if action == "BUY":

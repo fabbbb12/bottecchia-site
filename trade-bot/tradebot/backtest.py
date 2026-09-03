@@ -39,7 +39,9 @@ def run_backtest(
         pos = portfolio.position(symbol)
         if pos.quantity > 0:
             pos.peak_price = max(pos.peak_price, price)
-        action = apply_risk_management(row["action"], pos.quantity, pos.avg_price, pos.peak_price, price, strategy_cfg)
+        action = apply_risk_management(
+            row["action"], pos.quantity, pos.avg_price, pos.peak_price, price, row["atr"], strategy_cfg
+        )
 
         if action == "BUY":
             fill = portfolio.buy(timestamp, symbol, price, cash_fraction)

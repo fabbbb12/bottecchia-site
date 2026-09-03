@@ -48,3 +48,14 @@ def bollinger_bands(
     upper = mid + num_std * std
     lower = mid - num_std * std
     return pd.DataFrame({"upper": upper, "mid": mid, "lower": lower})
+
+
+def atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
+    """Average True Range: mede a volatilidade recente (em unidades de
+    preço, não em %), usada para adaptar stops à volatilidade de cada
+    ativo em vez de usar a mesma % fixa para todos."""
+    prev_close = close.shift(1)
+    true_range = pd.concat(
+        [high - low, (high - prev_close).abs(), (low - prev_close).abs()], axis=1
+    ).max(axis=1)
+    return true_range.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
