@@ -19,6 +19,7 @@ from pathlib import Path
 
 from tradebot.backtest import print_report, print_summary_table, run_backtest, run_multi_backtest
 from tradebot.backtest_b1 import BREAKOUT_PERIOD, run_multi_backtest_b1
+from tradebot.backtest_c1 import MOMENTUM_LOOKBACK_DAYS, TOP_K, print_c1_report, run_backtest_c1
 from tradebot.backtest_v2 import run_multi_backtest_v2
 from tradebot.backtest_v3 import run_multi_backtest_v3
 from tradebot.backtest_v4 import run_multi_backtest_v4
@@ -120,6 +121,24 @@ def build_parser() -> argparse.ArgumentParser:
     placebo_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
     placebo_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD)")
     placebo_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
+
+    c1_p = sub.add_parser(
+        "c1", parents=[common], help="Família C: C1, momentum duplo cross-sectional (rotação de carteira)"
+    )
+    c1_p.add_argument("--symbols", help="Lista separada por vírgula, ex: AAPL,MSFT,PETR4.SA")
+    c1_p.add_argument("--market", choices=["us", "br", "all"], help="Usa uma watchlist pronta (EUA, Bovespa ou ambas)")
+    c1_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
+    c1_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD)")
+    c1_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
+    c1_p.add_argument(
+        "--momentum-lookback",
+        type=int,
+        default=MOMENTUM_LOOKBACK_DAYS,
+        help="Janela de retorno acumulado usada no ranking, em pregões (padrão 252, ~12 meses)",
+    )
+    c1_p.add_argument(
+        "--top-k", type=int, default=TOP_K, help="Quantos ativos manter na carteira a cada rebalanceamento (padrão 3)"
+    )
 
     live_p = sub.add_parser("live", parents=[common], help="Loop de paper trading em quase-tempo-real")
     live_p.add_argument("--symbol", required=True, help="Um único símbolo, ex: AAPL, PETR4.SA")
@@ -285,6 +304,22 @@ def main(argv: list[str] | None = None) -> None:
         v3_results = run_multi_backtest_v3(symbols, strategy_cfg, **common_kwargs)
         v4_results = run_multi_backtest_v4(symbols, strategy_cfg, **common_kwargs)
         print_fibonacci_placebo_test(v1_results, v3_results, v4_results)
+
+    elif args.command == "c1":
+        symbols = resolve_symbols(args.market, args.symbols)
+        if not symbols:
+            parser.error("informe --symbols ou --market (us/br/all)")
+        result = run_backtest_c1(
+            symbols,
+            period=args.period,
+            interval=args.interval,
+            start=args.start,
+            end=args.end,
+            starting_cash=args.cash,
+            momentum_lookback_days=args.momentum_lookback,
+            top_k=args.top_k,
+        )
+        print_c1_report(result)
 
     elif args.command == "live":
         print("AVISO: modo 'live' continua sendo simulado (paper trading). Nenhuma ordem real é enviada.")

@@ -241,6 +241,47 @@ python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --ch
 análise completa (IS, OOS, walk-forward, respostas às perguntas A-I e
 classificação).
 
+## Família C — Momentum Duplo / Rotação de carteira (C1, em teste)
+
+Depois de 7 experimentos rejeitados (V2-V6, B1) — todos tentando
+temporizar UM ativo isolado contra o buy-and-hold desse mesmo ativo,
+numa cesta de mega caps/blue chips durante um mercado de alta secular —
+a decisão foi mudar de família de forma estrutural, não incremental:
+em vez de decidir comprar/vender um ativo por vez, a C1 decide **quais**
+ativos da cesta segurar, comparando-os entre si (momentum
+cross-sectional/relativo). É uma das poucas classes de estratégia
+sistemática com evidência acadêmica e prática de edge persistente e
+replicado em vários mercados e períodos (Jegadeesh & Titman, 1993;
+"Dual Momentum" de Antonacci, 2014) — por isso justifica mais uma
+rodada de teste rigoroso em vez de mais uma variante de V ou B.
+
+Regras (`tradebot/backtest_c1.py`):
+
+- Rebalanceamento no último pregão de cada mês-calendário, com o
+  retorno acumulado dos últimos 252 pregões (~12 meses, janela clássica
+  da literatura de momentum) de cada ativo, decidido no fechamento
+  desse dia. Execução no open do primeiro pregão do mês seguinte —
+  nunca no mesmo candle da decisão.
+- Momentum absoluto: só é candidato quem tiver retorno acumulado do
+  período > 0%; sem candidatos suficientes, a vaga fica em caixa (não é
+  preenchida por um ativo com momentum negativo).
+- Momentum relativo: dos candidatos, entram os 3 melhores (`TOP_K = 3`),
+  igualmente ponderados (sizing simples, `1/TOP_K` do caixa disponível
+  por entrada — sem rebalanceamento pra peso exato).
+- Mesmos custos (`fee_rate`/`slippage_rate`) e universo (US_WATCHLIST +
+  BR_WATCHLIST) das famílias V e B. Arquitetura diferente das
+  anteriores: é UMA carteira só, alocada entre os ativos ao longo do
+  tempo, não uma carteira independente por ativo — o benchmark é o
+  buy-and-hold da cesta inteira igualmente ponderada, sem rebalancear.
+
+```bash
+python -m tradebot c1 --market all --start 2021-01-01 --end 2023-01-01
+python -m tradebot c1 --market all --start 2018-01-01 --end 2020-01-01
+python -m tradebot c1 --market all --start 2012-01-01 --end 2024-01-01
+```
+
+Resultado: em aberto — ainda não foi rodado contra dados reais.
+
 ## Rodando os testes
 
 ```bash
@@ -260,6 +301,7 @@ trade-bot/
                     Sortino/Calmar/CAGR/Profit Factor) e relatório
     backtest_v2.py  Experimentos alternativos (V2 rejeitada) + comparação V1×V2
     backtest_b1.py  Família B: B1, rompimento puro (trend following)
+    backtest_c1.py  Família C: C1, momentum duplo cross-sectional (rotação de carteira)
     walkforward.py  Roda a estratégia congelada em janelas sequenciais (V1 ou outra, via backtest_fn)
     live.py         Loop de paper trading com persistência de estado
     charts.py       Gráficos PNG (preço, indicadores, sinais de compra/venda)
