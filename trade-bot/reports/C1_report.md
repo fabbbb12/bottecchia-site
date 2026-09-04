@@ -75,3 +75,18 @@ proteção proporcional. Isso preservaria a mesma disciplina de teste
 único por hipótese já usada em todo o projeto — não é uma otimização
 depois do resultado, é uma pergunta nova e específica sobre um
 mecanismo (concentração) que os dados já sugerem como candidato.
+
+## C2 — pré-registro (decidido ANTES de rodar qualquer teste)
+
+Confirmado com o usuário: testar a mesma engine da C1
+(`tradebot/backtest_c1.py`, nenhum código novo — só o parâmetro `top_k`
+já exposto via `--top-k`), mudando **apenas** `TOP_K` de 3 para **5**
+(de 11 ativos). Todo o resto — `MOMENTUM_LOOKBACK_DAYS = 252`,
+rebalanceamento mensal, filtro de momentum absoluto, custos, universo —
+permanece idêntico à C1. Hipótese: menos concentração reduz o "cash
+drag" nas janelas de alta forte e em linha reta (onde a C1 perdeu do
+buy-and-hold) sem sacrificar a proteção de drawdown nas janelas
+turbulentas (onde a C1 ganhou). Nenhum resultado foi rodado ainda no
+momento em que este parágrafo foi escrito — `TOP_K = 5` está congelado
+antes de qualquer teste, mesmo processo das seis janelas de walk-forward
+já usado pra C1.
