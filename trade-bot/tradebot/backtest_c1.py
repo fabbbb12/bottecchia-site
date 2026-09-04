@@ -72,6 +72,18 @@ pregão dos EUA e da Bovespa não coincidem exatamente (feriados
 diferentes); os painéis de preço são alinhados pela união das datas com
 forward-fill (nunca com dado futuro) para cobrir esses poucos dias de
 descompasso — uma simplificação deliberada, documentada aqui.
+
+RESULTADO: PROMISSORA (walk-forward 2012-2024, 6 janelas de 2 anos). Não
+bate o buy-and-hold da cesta de forma robusta (perde em CAGR/Sortino/
+Calmar na maioria das janelas), mas é o melhor resultado do projeto até
+agora: bate a V1 em Sharpe em 5/6 janelas e em CAGR em 4/6, mantendo a
+mesma vantagem de drawdown (6/6 janelas). O padrão de quando ganha/perde
+do B&H é explicável (perde em janelas de alta forte e em linha reta,
+onde ficar de fora prejudica; ganha em janelas com correções relevantes
+no meio do caminho) — diferente da inversão sem explicação de regime
+vista em V3/V5/V6/B1. Ver reports/C1_report.md para a análise completa
+e a recomendação de próximo passo (testar TOP_K maior como C2, ainda
+não implementado, pendente de confirmação).
 """
 
 import logging

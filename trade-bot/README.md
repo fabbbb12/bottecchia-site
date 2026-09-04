@@ -241,7 +241,7 @@ python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --ch
 análise completa (IS, OOS, walk-forward, respostas às perguntas A-I e
 classificação).
 
-## Família C — Momentum Duplo / Rotação de carteira (C1, em teste)
+## Família C — Momentum Duplo / Rotação de carteira (C1, promissora)
 
 Depois de 7 experimentos rejeitados (V2-V6, B1) — todos tentando
 temporizar UM ativo isolado contra o buy-and-hold desse mesmo ativo,
@@ -280,7 +280,16 @@ python -m tradebot c1 --market all --start 2018-01-01 --end 2020-01-01
 python -m tradebot c1 --market all --start 2012-01-01 --end 2024-01-01
 ```
 
-Resultado: em aberto — ainda não foi rodado contra dados reais.
+**Resultado: PROMISSORA** (walk-forward real, 6 janelas de 2 anos,
+2012-2024). Não bate o buy-and-hold da cesta de forma robusta (perde em
+CAGR/Sortino/Calmar na maioria das janelas), mas é o melhor resultado do
+projeto até agora: bate a V1 em Sharpe em 5/6 janelas e em CAGR em 4/6,
+mantendo a mesma vantagem de drawdown (6/6 janelas). O padrão de
+vitória/derrota é explicável — perde em janelas de alta forte e em linha
+reta (fica de fora prejudica), ganha em janelas com correções relevantes
+no meio do caminho — ao contrário da inversão sem explicação de regime
+vista em V3/V5/V6/B1. Análise completa e recomendação de próximo passo
+(testar `TOP_K` maior como C2) em `reports/C1_report.md`.
 
 ## Rodando os testes
 

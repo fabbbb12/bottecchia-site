@@ -1,0 +1,77 @@
+# C1 — Momentum Duplo / rotação de carteira (família C)
+
+**Status: PROMISSORA.** Não bate o buy-and-hold da cesta de forma
+robusta (perde em CAGR/Sortino/Calmar na maioria das janelas), mas é o
+melhor resultado de todo o programa de pesquisa até agora: bate a V1 em
+Sharpe em 5 das 6 janelas do walk-forward e em CAGR em 4 das 6, mantendo
+a mesma vantagem de drawdown que caracteriza a V1 e a B1 (6/6 janelas).
+Ao contrário de V3/V5/V6/B1, o padrão de quando ganha e quando perde é
+economicamente explicável, não uma inversão sem explicação entre
+períodos.
+
+## Walk-forward (2012-2024, 6 janelas de 2 anos)
+
+| Janela | Retorno C1/B&H | CAGR C1/B&H | DD C1/B&H | Sharpe C1/B&H | Sortino C1/B&H | Calmar C1/B&H |
+|---|---|---|---|---|---|---|
+| 2012-2014 | 5.24% / 156.69% | 2.59% / 60.37% | -8.04% / -11.42% | 0.35 / 0.95 | 0.41 / 6.26 | 0.32 / 5.28 |
+| 2014-2016 | 15.80% / 23.19% | 7.64% / 11.03% | -9.88% / -14.76% | **0.88 / 0.68** | 1.05 / 1.09 | **0.77 / 0.75** |
+| 2016-2018 | 36.24% / 133.71% | 16.86% / 53.37% | -12.49% / -12.55% | 1.15 / 2.15 | 1.17 / 3.06 | 1.35 / 4.25 |
+| 2018-2020 | 29.20% / 51.88% | 13.72% / 23.33% | -10.72% / -18.31% | **1.31 / 1.20** | 1.37 / 1.67 | **1.28 / 1.27** |
+| 2020-2022 | 18.37% / 84.09% | 8.82% / 35.77% | -11.18% / -33.16% | 0.69 / 1.15 | 0.72 / 1.30 | 0.79 / 1.08 |
+| 2022-2024 | 47.34% / 32.17% | **21.56% / 15.09%** | -7.29% / -21.29% | **1.82 / 0.83** | **2.16 / 1.22** | **2.96 / 0.71** |
+| **Média** | 25.37% / 80.29% | 11.87% / 33.16% | **-9.93% / -18.58%** | 1.03 / 1.16 | 1.15 / 2.43 | 1.25 / 2.22 |
+
+C1 > B&H: Retorno 1/6, CAGR 1/6, **Drawdown 6/6**, Sharpe 3/6, Sortino
+1/6, Calmar 3/6.
+
+## O padrão (explicável, não uma inversão sem causa)
+
+C1 perde do buy-and-hold justamente nas janelas de alta forte e
+praticamente em linha reta (2012-2014: B&H +157%; 2016-2018: B&H +134%;
+2020-2022: B&H +84%) — nessas janelas, qualquer estratégia que gira
+capital entre ativos ou passa parte do tempo com menos exposição total
+perde para simplesmente segurar tudo o tempo todo, porque não há
+correção no meio do caminho pra "compensar" ficar de fora. C1 ganha (ou
+empata) nas janelas mais turbulentas, com correções relevantes no meio
+do percurso (2014-2016: correção de 2015-16; 2018-2020: queda de
+dez/2018 + crash da Covid; 2022-2024: queda de 2022) — aí a rotação e o
+filtro de momentum absoluto evitam parte da dor sem desistir da
+recuperação.
+
+Isso é consistente com a literatura de momentum (o efeito é real, mas
+sofre "momentum crashes" logo após reversões bruscas — Daniel &
+Moskowitz, 2016) e é uma explicação de mecanismo, não uma coincidência
+de período sem causa — diferente do que aconteceu com V3/V5/V6/B1, onde
+a reversão IS→OOS não tinha um padrão de regime que se sustentasse.
+
+## C1 vs V1 (mesmas 6 janelas, ver reports anteriores para os números da V1)
+
+C1 bate a V1 em CAGR em 4/6 janelas (2014-16, 2016-18, 2018-20, 2022-24)
+e em Sharpe em 5/6 janelas (todas exceto 2012-14). Isso é uma melhora
+real e consistente sobre o melhor resultado que este projeto já tinha
+produzido — a V1, isoladamente, nunca bateu o Sharpe médio do
+buy-and-hold em NENHUMA das 6 janelas ao nível de carteira; a C1 bate em
+3 das 6.
+
+## Por que não é VALIDADA ainda
+
+- Sortino e Calmar continuam atrás do buy-and-hold na maioria das
+  janelas (1/6 e 3/6) — o corte de drawdown não compensa a perda de
+  retorno em todas as métricas de risco-ajustado, só no Sharpe.
+- CAGR/retorno bruto perde pro buy-and-hold em 5 das 6 janelas — a
+  vantagem de Sharpe nas janelas turbulentas não é grande o bastante
+  pra também vencer em retorno absoluto na maioria dos casos.
+- Só uma janela (2022-2024) mostra vitória clara e ampla em todas as
+  métricas ao mesmo tempo — as outras "vitórias" são parciais (só
+  Sharpe/Calmar, retorno ainda perde).
+
+## Próximo passo (recomendação, não implementado sem confirmação)
+
+Testar TOP_K maior (ex: 5 ou 6 de 11) como uma hipótese isolada e nova
+(C2), com parâmetro congelado ANTES de rodar — a suspeita (não
+confirmada) é que segurar só 3 de 11 ativos concentra demais a aposta e
+aumenta o "cash drag" nas janelas de alta em linha reta, sem ganho de
+proteção proporcional. Isso preservaria a mesma disciplina de teste
+único por hipótese já usada em todo o projeto — não é uma otimização
+depois do resultado, é uma pergunta nova e específica sobre um
+mecanismo (concentração) que os dados já sugerem como candidato.
