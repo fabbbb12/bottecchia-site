@@ -480,7 +480,22 @@ python -m tradebot c1 --market crypto --start 2021-01-01 --end 2023-01-01
 python -m tradebot c1 --market crypto --start 2020-05-01 --end 2024-01-01
 ```
 
-Resultado: em aberto — ainda não foi rodado contra dados reais.
+**Resultado: oposto ao das ações — a C1 perde do buy-and-hold em
+risco-ajustado nos dois testes**, não só em retorno bruto:
+
+| Período | Sharpe C1 | Sharpe B&H |
+|---|---|---|
+| 2021-2023 (inclui colapsos de Terra/Luna e FTX) | -0.31 | **0.89** |
+| 2020-05 a 2024-01 | 0.94 | **1.24** |
+
+Diferente do universo diversificado de ações, aqui o edge não se
+sustenta. Hipótese (não confirmada): as 5 criptos são fortemente
+correlacionadas entre si, o que reduz o valor de um ranking
+cross-sectional (que depende de dispersão real entre os ativos), e a
+volatilidade extrema de cripto (drawdowns de -80% a -91%) machuca mais
+uma estratégia de momentum. **Conclusão: o edge da C1 não é universal**
+— funciona melhor em ações diversificadas com correlação mais baixa,
+não em cripto. Análise completa em `reports/C1_report.md`.
 
 ## Rodando os testes
 

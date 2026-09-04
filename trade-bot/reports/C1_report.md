@@ -206,5 +206,43 @@ edge real (confirmado contra placebo E robusto fora da cesta de tech),
 bate o Sharpe do buy-and-hold de forma consistente no universo
 diversificado, mas ainda não bate CAGR/retorno bruto e tem uma
 fraqueza conhecida (reversões bruscas de momentum). C2 (diluição) não
-ajudou. Próximo teste natural: cripto (ver README, "Teste de universo
-cripto").
+ajudou.
+
+## Teste de universo cripto (Binance) — resultado oposto ao das ações
+
+Pedido do usuário, com a ressalva de viés de sobrevivência estrutural
+já documentada em `tradebot/markets.py` e no README (não dá pra
+reconstruir de graça "quem era top 5 por capitalização em cada ano" —
+o teste usa o top 5 de hoje, quase por definição os que mais
+valorizaram desde que existem).
+
+| Período | Retorno C1 | Retorno B&H | Sharpe C1 | Sharpe B&H |
+|---|---|---|---|---|
+| 2021-01 a 2023-01 | -24.65% | **210.80%** | -0.31 | **0.89** |
+| 2020-05 a 2024-01 | 663.60% | **3405.79%** | 0.94 | **1.24** |
+
+**Diferente do universo diversificado de ações, aqui a C1 perde do
+buy-and-hold em risco-ajustado nos dois testes**, não só em retorno
+bruto — o oposto do que vimos com ações. No período 2021-2023 (que
+inclui os colapsos de Terra/Luna e FTX em 2022), a C1 termina
+totalmente em caixa e perde feio (-24.65% vs +210.80% do B&H). No
+período mais longo o resultado melhora em termos absolutos mas o
+Sharpe da C1 continua atrás (0.94 vs 1.24).
+
+Duas explicações plausíveis (não confirmadas com mais teste, só
+raciocínio): (1) as 5 criptos escolhidas são fortemente correlacionadas
+entre si (tendem a subir e cair juntas nos ciclos de alta/baixa do
+mercado cripto como um todo) — isso reduz o valor de um ranking
+cross-sectional, que depende de dispersão real entre os ativos pra
+funcionar; (2) a volatilidade extrema de cripto (drawdowns de -80% a
+-91%) pode gerar mais "momentum crashes" (reversões bruscas logo após
+uma alta) do que em ações, machucando mais uma estratégia que aposta
+sistematicamente em quem subiu recente.
+
+**Conclusão: o edge da C1 não é universal.** Funciona melhor num
+universo de ações diversificado e com correlação mais baixa entre os
+ativos; não se sustenta (nem em retorno, nem em risco-ajustado) num
+universo pequeno, altamente correlacionado e extremamente volátil como
+cripto. Isso não invalida o achado das ações — mostra que o mecanismo
+tem condição de funcionamento, não é uma máquina de vencer qualquer
+mercado.
