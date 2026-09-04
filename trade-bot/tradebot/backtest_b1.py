@@ -60,6 +60,22 @@ lado a lado, sem escolher o melhor depois) e decidir se um teste de
 placebo é metodologicamente válido para esta família — nenhum dos dois é
 feito automaticamente aqui, de propósito: primeiro se descobre se a B1
 funciona, só depois se discute variante.
+
+RESULTADO: EXPERIMENTO REJEITADO (IS 2021-2023, OOS 2018-2020, ambos os
+mesmos períodos usados em V2-V6; walk-forward 2012-2024, 6 janelas, 66
+combinações janela×ativo). A B1 supera a V1 em retorno/Sharpe/Sortino/
+Calmar no IS, mas essa vantagem se INVERTE no OOS (a V1 volta a superar
+a B1 nas mesmas métricas) — o mesmo tipo de dependência de período que
+já desqualificou V3/V5/V6, embora sem um padrão de regime limpo (a B1
+perde pra V1 tanto na janela de walk-forward mais parecida com queda
+quanto em uma das janelas de alta mais fortes). A única propriedade
+consistente nos dois períodos e em todas as 6 janelas do walk-forward é
+o corte de drawdown, ainda mais agressivo que o da própria V1 (drawdown
+quase pela metade em valor absoluto) — mas isso não é uma vantagem nova,
+é a mesma característica que a V1 já tinha, só que mais extrema, obtida
+abrindo mão de mais retorno ainda. Nunca bate o buy-and-hold em retorno
+nem em risco-ajustado. Ver reports/B1_report.md para a análise completa
+(A-I) e a classificação.
 """
 
 import logging

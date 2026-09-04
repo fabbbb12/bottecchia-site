@@ -44,6 +44,17 @@ redução de drawdown, não um gerador de retorno superior ao buy-and-hold.**
     `tradebot/backtest_v2.py`, `backtest_v3.py`, `backtest_v5.py` e
     `backtest_v6.py` — mantidos no repositório como registro dos
     experimentos, não como algo a usar.
+- **B1** (nova família B, trend following/rompimento puro, estruturalmente
+  diferente da V1-V6): também rejeitada. Supera a V1 em retorno/Sharpe/
+  Sortino/Calmar no período IS (2021-2023), mas essa vantagem se
+  **inverte** no OOS (2018-2020) — mesma dependência de período que
+  já reprovou V3/V5/V6, sem um padrão de regime limpo dessa vez. A
+  única propriedade consistente é um corte de drawdown ainda mais
+  agressivo que o da própria V1 (drawdown quase pela metade em valor
+  absoluto, 65/66 combinações vencendo o buy-and-hold), mas isso não é
+  novo — é a mesma característica da V1, só mais extrema, trocando
+  ainda mais retorno por menos dor. Nunca bate o buy-and-hold. Detalhes
+  completos em `reports/B1_report.md` e `tradebot/backtest_b1.py`.
 
 Ou seja: útil para quem valoriza uma trajetória com menos dor no pior
 momento e aceita abrir mão de retorno para isso; **não é** uma estratégia
@@ -188,12 +199,16 @@ uma V2 nova: precisa melhorar retorno e/ou Sharpe/Sortino de forma clara e
 robusta (mediana + vitórias, não só média) sem piorar muito o drawdown da
 V1, confirmado depois em OOS e walk-forward antes de qualquer uso real.
 
-## Família B — Trend Following / Breakout (B1)
+## Família B — Trend Following / Breakout (B1, rejeitada)
 
 A família V (V1-V6, acima) testou variações de um sistema de votos com
 reversão à média. A família B testa uma ideia estruturalmente diferente:
 seguir tendência via rompimento de máxima. A B1 (`tradebot/backtest_b1.py`)
-é a primeira e única hipótese dessa família implementada até agora:
+é a primeira hipótese dessa família — **rejeitada** (ver
+`reports/B1_report.md` para a análise completa: bate a V1 no IS mas
+perde no OOS, sem padrão de regime que explique a inversão; único ponto
+consistente é um corte de drawdown ainda maior que o da V1, não uma
+vantagem de retorno ajustado ao risco). Regras testadas:
 
 - Entrada: `close[t] > highest_high_N[t]` (máxima das máximas dos `N`
   candles ANTERIORES, `N = 20` congelado), execução no open de `t+1`.
@@ -210,9 +225,11 @@ python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --ch
 python -m tradebot walkforward --market all --start 2012-01-01 --end 2024-01-01 --window-years 2 --challenger b1
 ```
 
-Teste de sensibilidade (rodar DEPOIS do resultado principal, reportar os
-três valores lado a lado, nunca escolher o melhor depois de ver o
-resultado):
+Teste de sensibilidade (`breakout_period` 10/20/40) e placebo ficaram
+propositalmente de fora — o resultado principal (IS + OOS + walk-forward,
+ver `reports/B1_report.md`) já foi negativo o bastante pra fechar o
+experimento sem precisar deles. Comandos deixados aqui só como referência,
+caso alguém queira reabrir a investigação:
 
 ```bash
 python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --challenger b1 --breakout-period 10
@@ -220,7 +237,9 @@ python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --ch
 python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --challenger b1 --breakout-period 40
 ```
 
-Resultado: em aberto — ainda não foi rodado contra dados reais.
+**Resultado: EXPERIMENTO REJEITADO.** Ver `reports/B1_report.md` para a
+análise completa (IS, OOS, walk-forward, respostas às perguntas A-I e
+classificação).
 
 ## Rodando os testes
 
