@@ -289,7 +289,40 @@ vitória/derrota é explicável — perde em janelas de alta forte e em linha
 reta (fica de fora prejudica), ganha em janelas com correções relevantes
 no meio do caminho — ao contrário da inversão sem explicação de regime
 vista em V3/V5/V6/B1. Análise completa e recomendação de próximo passo
-(testar `TOP_K` maior como C2) em `reports/C1_report.md`.
+(testar `TOP_K` maior como C2) em `reports/C1_report.md`. **C2 (`TOP_K=5`)
+pré-registrada, ainda sem resultado** — mesma engine da C1, ver
+`reports/C1_report.md` para o parâmetro congelado.
+
+## Família D — Reversão à Média Pura por Faixa (D1, em teste)
+
+Pedido do usuário: um sistema que opere com mais frequência, comprando
+perto de mínimas locais e vendendo perto de máximas locais — capturando
+o zigue-zague do preço dentro de uma faixa, em vez de tentar pegar a
+tendência (B1/C1) ou só reduzir exposição (V1). Estruturalmente
+diferente das três: é reversão à média pura, um ativo por vez, sem votar
+múltiplos indicadores.
+
+Regras (`tradebot/backtest_d1.py`):
+
+- Entrada: `close[t] <= banda_inferior_bollinger[t]` (proxy objetivo e
+  sem look-ahead pra "perto de uma mínima local"), execução no open de
+  `t+1`.
+- Saída-alvo: `close[t] >= banda_superior_bollinger[t]` ("perto de uma
+  máxima local"), mesma disciplina de execução no dia seguinte.
+- Stop-loss: 6% abaixo do preço de entrada (mesmo valor congelado da
+  V1) — protege contra um rompimento de baixa real, já que nem toda
+  "mínima local" vira alta.
+- Bandas de Bollinger: período 20, 2 desvios-padrão (mesmos parâmetros
+  já usados no voto da V1). Sem RSI, MACD, Volume, Fibonacci ou filtro
+  de tendência — só a banda, isolada.
+- Mesmo sizing, custos e universo (US_WATCHLIST + BR_WATCHLIST) da V1.
+
+```bash
+python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --challenger d1
+python -m tradebot walkforward --market all --start 2012-01-01 --end 2024-01-01 --window-years 2 --challenger d1
+```
+
+Resultado: em aberto — ainda não foi rodado contra dados reais.
 
 ## Rodando os testes
 
@@ -311,6 +344,7 @@ trade-bot/
     backtest_v2.py  Experimentos alternativos (V2 rejeitada) + comparação V1×V2
     backtest_b1.py  Família B: B1, rompimento puro (trend following)
     backtest_c1.py  Família C: C1, momentum duplo cross-sectional (rotação de carteira)
+    backtest_d1.py  Família D: D1, reversão à média pura por banda de Bollinger (zigue-zague)
     walkforward.py  Roda a estratégia congelada em janelas sequenciais (V1 ou outra, via backtest_fn)
     live.py         Loop de paper trading com persistência de estado
     charts.py       Gráficos PNG (preço, indicadores, sinais de compra/venda)

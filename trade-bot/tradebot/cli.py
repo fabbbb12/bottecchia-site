@@ -20,6 +20,7 @@ from pathlib import Path
 from tradebot.backtest import print_report, print_summary_table, run_backtest, run_multi_backtest
 from tradebot.backtest_b1 import BREAKOUT_PERIOD, run_multi_backtest_b1
 from tradebot.backtest_c1 import MOMENTUM_LOOKBACK_DAYS, TOP_K, print_c1_report, run_backtest_c1
+from tradebot.backtest_d1 import BB_PERIOD, BB_STD, STOP_LOSS_PCT, run_multi_backtest_d1
 from tradebot.backtest_v2 import run_multi_backtest_v2
 from tradebot.backtest_v3 import run_multi_backtest_v3
 from tradebot.backtest_v4 import run_multi_backtest_v4
@@ -71,7 +72,7 @@ def build_parser() -> argparse.ArgumentParser:
     wf_p.add_argument("--window-years", type=float, default=2.0, help="Tamanho de cada janela, em anos")
     wf_p.add_argument(
         "--challenger",
-        choices=["v2", "v3", "v4", "v5", "v6", "b1"],
+        choices=["v2", "v3", "v4", "v5", "v6", "b1", "d1"],
         default=None,
         help="Opcional: também roda o walk-forward dessa versão/família, além da V1 (relatórios separados)",
     )
@@ -95,12 +96,13 @@ def build_parser() -> argparse.ArgumentParser:
     compare_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
     compare_p.add_argument(
         "--challenger",
-        choices=["v2", "v3", "v4", "v5", "v6", "b1"],
+        choices=["v2", "v3", "v4", "v5", "v6", "b1", "d1"],
         default="v2",
         help=(
             "v2 = reentrada antecipada (rejeitada); v3 = filtro de Fibonacci (rejeitada); "
             "v4 = placebo aleatório; v5 = Fibonacci como position sizing (rejeitada); "
-            "v6 = filtro de Volume Relativo; b1 = rompimento puro (família B, trend following)"
+            "v6 = filtro de Volume Relativo; b1 = rompimento puro (família B, trend following); "
+            "d1 = reversão à média pura por banda de Bollinger (família D, zigue-zague)"
         ),
     )
     compare_p.add_argument(
@@ -225,6 +227,7 @@ def main(argv: list[str] | None = None) -> None:
                 "v5": run_multi_backtest_v5,
                 "v6": run_multi_backtest_v6,
                 "b1": run_multi_backtest_b1,
+                "d1": run_multi_backtest_d1,
             }
             challenger_kwargs = {"breakout_period": args.breakout_period} if args.challenger == "b1" else None
             logger.info("V1 concluída. Iniciando walk-forward de %s...", args.challenger.upper())
@@ -269,6 +272,7 @@ def main(argv: list[str] | None = None) -> None:
             "v5": run_multi_backtest_v5,
             "v6": run_multi_backtest_v6,
             "b1": run_multi_backtest_b1,
+            "d1": run_multi_backtest_d1,
         }
         challenger_fn = challenger_fns[args.challenger]
         extra_kwargs = {"breakout_period": args.breakout_period} if args.challenger == "b1" else {}
