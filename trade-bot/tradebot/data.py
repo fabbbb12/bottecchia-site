@@ -1,13 +1,15 @@
-"""Obtenção de dados de mercado (OHLCV) via yfinance.
-
-Funciona tanto para ações/índices (ex: "PETR4.SA", "AAPL") quanto para
-criptomoedas (ex: "BTC-USD", "ETH-USD"), sem precisar de chave de API.
+"""Obtenção de dados de mercado (OHLCV) via yfinance (ações/índices/cripto
+agregada) ou, para pares terminados em "USDT", diretamente da API pública
+da Binance (intraday de verdade, sem precisar de chave de API — ver
+`tradebot/binance_data.py`).
 """
 
 import logging
 
 import pandas as pd
 import yfinance as yf
+
+from tradebot.binance_data import fetch_binance_klines, is_binance_symbol
 
 logger = logging.getLogger("tradebot.data")
 
@@ -36,7 +38,14 @@ def fetch_ohlcv(
     "travou" — e o `logging.StreamHandler` já dá flush a cada linha, então
     aparece mesmo com a saída redirecionada pra arquivo. `timeout` evita
     que uma chamada de rede trave indefinidamente: estoura exceção (que
-    quem chama já trata pulando o símbolo) em vez de nunca retornar."""
+    quem chama já trata pulando o símbolo) em vez de nunca retornar.
+
+    Símbolos terminados em "USDT" (ex: "BTCUSDT") são roteados pra API da
+    Binance em vez do yfinance — mesmo formato de saída, mas com histórico
+    intraday de verdade em vez dos poucos dias que o yfinance guarda."""
+    if is_binance_symbol(symbol):
+        return fetch_binance_klines(symbol, interval=interval, period=period, start=start, end=end)
+
     logger.info("Baixando %s (period=%s, interval=%s, start=%s, end=%s)...", symbol, period, interval, start, end)
     if start:
         raw = yf.download(

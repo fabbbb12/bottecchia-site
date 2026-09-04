@@ -497,6 +497,37 @@ uma estratégia de momentum. **Conclusão: o edge da C1 não é universal**
 — funciona melhor em ações diversificadas com correlação mais baixa,
 não em cripto. Análise completa em `reports/C1_report.md`.
 
+## Dados intraday de cripto via Binance (sem chave de API)
+
+O yfinance só guarda poucos dias de candle de minuto — não dá pra fazer
+um backtest intraday sério com isso. `tradebot/binance_data.py` busca
+candles direto da API pública da Binance (`/api/v3/klines`), que não
+exige autenticação nem chave — só dado de mercado público, com anos de
+histórico intraday de verdade.
+
+**Roteamento automático**: qualquer símbolo terminado em `USDT` (ex:
+`BTCUSDT`, `ETHUSDT`) é buscado na Binance em vez do yfinance — mesmo
+formato de saída, então todas as famílias (V-E) já funcionam sem
+nenhuma mudança:
+
+```bash
+python -m tradebot backtest --symbol BTCUSDT --interval 1h --period 3mo
+python -m tradebot c1 --symbols BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT --interval 4h --period 6mo
+```
+
+**Sobre a chave de API**: este projeto só chama o endpoint público de
+candles — nunca endpoint de conta, ordem, ou qualquer coisa que exija
+autenticação, consistente com o resto do projeto (100% paper trading,
+nenhuma ordem real é enviada a lugar nenhum). Uma chave de API não é
+necessária pra nada do que este bot faz. Se algum dia for útil pra
+limite de taxa mais alto, seria só a chave pública como header, lida de
+variável de ambiente — **nunca cole chave nem secret no código ou no
+histórico do repositório.**
+
+Isso abre a porta pra testar estratégias de giro mais rápido (a família
+D — reversão à média por faixa — nunca foi testada em candle de 1h/4h,
+só diário) com histórico de verdade, não só os últimos dias.
+
 ## Venda a descoberto (short) — infraestrutura nova
 
 Até aqui a carteira só suportava posição comprada (long-only), o que
@@ -562,7 +593,8 @@ PYTHONPATH=. python -m pytest tests/ -q
 ```
 trade-bot/
   tradebot/
-    data.py        Coleta de dados (yfinance)
+    data.py        Coleta de dados (yfinance; roteia pra Binance símbolos "USDT")
+    binance_data.py Candles intraday via API pública da Binance (sem chave)
     indicators.py  SMA, EMA, RSI, MACD, Bandas de Bollinger
     strategy.py     Combina indicadores em um sinal (BUY/SELL/HOLD)
     portfolio.py    Carteira simulada (caixa, posições, taxas, slippage, compra e venda a descoberto)
