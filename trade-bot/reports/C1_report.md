@@ -86,7 +86,31 @@ rebalanceamento mensal, filtro de momentum absoluto, custos, universo —
 permanece idêntico à C1. Hipótese: menos concentração reduz o "cash
 drag" nas janelas de alta forte e em linha reta (onde a C1 perdeu do
 buy-and-hold) sem sacrificar a proteção de drawdown nas janelas
-turbulentas (onde a C1 ganhou). Nenhum resultado foi rodado ainda no
-momento em que este parágrafo foi escrito — `TOP_K = 5` está congelado
-antes de qualquer teste, mesmo processo das seis janelas de walk-forward
-já usado pra C1.
+turbulentas (onde a C1 ganhou).
+
+## C2 — resultado (walk-forward completo, 6 janelas, `TOP_K=5`)
+
+| Janela | Retorno C2/B&H | CAGR C2/B&H | Sharpe C2/B&H | Sharpe C1 (TOP_K=3) |
+|---|---|---|---|---|
+| 2012-2014 | 5.64% / 156.69% | 2.79% / 60.37% | 0.43 / 0.95 | 0.35 |
+| 2014-2016 | 14.13% / 23.19% | 6.85% / 11.03% | **0.86** / 0.68 | 0.88 |
+| 2016-2018 | 27.24% / 133.71% | 12.90% / 53.37% | 1.21 / 2.15 | 1.15 |
+| 2018-2020 | 22.35% / 51.88% | 10.65% / 23.33% | 1.15 / 1.20 | 1.31 |
+| 2020-2022 | 24.13% / 84.09% | 11.44% / 35.77% | 0.96 / 1.15 | 0.69 |
+| 2022-2024 | 34.50% / 32.17% | **16.11% / 15.09%** | **1.80** / 0.83 | 1.82 |
+| **Média Sharpe** | | | **1.07** | 1.03 |
+| **Média CAGR** | | | **10.12%** | 11.87% |
+
+**Hipótese NÃO confirmada.** `TOP_K=5` bate `TOP_K=3` em Sharpe em
+apenas 3 das 6 janelas (por margens pequenas, exceto 2020-2022), com
+Sharpe médio marginalmente melhor (1.07 vs 1.03) mas CAGR médio **pior**
+(10.12% vs 11.87%) — diluir a concentração não reduziu o "cash drag" de
+forma consistente; na janela 2016-2018 (uma das que motivou a hipótese)
+o resultado até piorou relativo ao B&H (gap de -97pp com TOP_K=3 foi
+para -106pp com TOP_K=5). Diluir mais não é a alavanca certa.
+
+**Decisão: manter `TOP_K=3` (configuração original da C1) como a
+referência da família C.** C2 fica registrada como um teste de
+sensibilidade negativo, não como uma variante melhor — consistente com
+a disciplina do projeto de nunca adotar um parâmetro só porque foi
+testado.

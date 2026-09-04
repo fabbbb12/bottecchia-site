@@ -299,9 +299,14 @@ vitória/derrota é explicável — perde em janelas de alta forte e em linha
 reta (fica de fora prejudica), ganha em janelas com correções relevantes
 no meio do caminho — ao contrário da inversão sem explicação de regime
 vista em V3/V5/V6/B1. Análise completa e recomendação de próximo passo
-(testar `TOP_K` maior como C2) em `reports/C1_report.md`. **C2 (`TOP_K=5`)
-pré-registrada, ainda sem resultado** — mesma engine da C1, ver
-`reports/C1_report.md` para o parâmetro congelado.
+(testar `TOP_K` maior como C2) em `reports/C1_report.md`.
+
+**C2 (`TOP_K=5`) testada e a hipótese NÃO se confirmou** — diluir de 3
+para 5 ativos não reduziu o "cash drag" de forma consistente (Sharpe
+médio marginalmente melhor, 1.07 vs 1.03, mas CAGR médio pior, 10.12%
+vs 11.87%, e piorou justamente numa das janelas que motivaram o teste).
+**Decisão: `TOP_K=3` (configuração original da C1) fica como a
+referência da família C.** Detalhes em `reports/C1_report.md`.
 
 ## Família D — Reversão à Média Pura por Faixa (D1, rejeitada)
 
@@ -340,6 +345,37 @@ o achado consolidado em vez de ser um caso isolado. No walk-forward
 completo tem o melhor recorde de drawdown do projeto (66/66), mas só
 bate a V1 em Sharpe em 3 das 6 janelas, sem padrão de regime que
 explique a divisão. Análise completa em `reports/D1_report.md`.
+
+## Estado atual da pesquisa (decisão, não pergunta em aberto)
+
+Depois de 4 famílias estruturalmente diferentes testadas com o mesmo
+rigor (IS/OOS/walk-forward, sem cherry-picking) — V (voto multi-
+indicador), B (rompimento de tendência), C (rotação por momentum
+cross-sectional) e D (reversão à média por faixa) — a fase de
+experimentação ativa está encerrada. Resumo:
+
+- **Rejeitadas**: V2, V3, V5, V6, B1, D1. Todas mostraram o mesmo
+  padrão — melhora aparente num recorte, sem sustentar fora da amostra
+  — ou giro sem contrapartida.
+- **C1 (`TOP_K=3`, `MOMENTUM_LOOKBACK_DAYS=252`) é a única linha com
+  resultado favorável** e fica como a referência de qualquer uso futuro
+  além do benchmark V1. Não bate o buy-and-hold de forma robusta, mas é
+  a primeira estratégia do projeto a bater a V1 de forma consistente
+  (Sharpe em 5/6 janelas, CAGR em 4/6) com uma explicação de mecanismo
+  plausível (perde só quando o mercado sobe em linha reta sem correção).
+  C2 (diluir pra `TOP_K=5`) foi testada e não melhorou o resultado — a
+  configuração original é a que fica.
+- Continuar gerando variante atrás de variante sem uma hipótese nova e
+  bem fundamentada é o caminho pro overfitting/data-dredging que este
+  projeto foi desenhado pra evitar. Por isso a decisão é parar aqui, não
+  seguir "testando mais uma ideia" indefinidamente.
+
+**Recomendação para uso real (ainda 100% simulado/paper):** se algum dia
+fizer sentido acompanhar uma estratégia "ao vivo" (sempre em paper
+trading), C1 com os parâmetros congelados acima é a candidata — com a
+expectativa correta de que ela reduz drawdown de forma consistente e
+tem uma leve vantagem de Sharpe sobre a V1, mas não deve ser esperada
+para bater simplesmente comprar e segurar os mesmos ativos.
 
 ## Rodando os testes
 
