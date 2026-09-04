@@ -22,6 +22,8 @@ from tradebot.backtest_b1 import BREAKOUT_PERIOD, run_multi_backtest_b1
 from tradebot.backtest_c1 import MOMENTUM_LOOKBACK_DAYS, TOP_K, print_c1_report, run_backtest_c1
 from tradebot.backtest_c3 import SEED, print_c1_c3_comparison, run_backtest_c3
 from tradebot.backtest_d1 import BB_PERIOD, BB_STD, STOP_LOSS_PCT, run_multi_backtest_d1
+from tradebot.backtest_e1 import LOOKBACK_DAYS as E1_LOOKBACK_DAYS
+from tradebot.backtest_e1 import PAIRS, print_multi_e1_report, run_multi_backtest_e1
 from tradebot.backtest_v2 import run_multi_backtest_v2
 from tradebot.backtest_v3 import run_multi_backtest_v3
 from tradebot.backtest_v4 import run_multi_backtest_v4
@@ -163,6 +165,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Janela de retorno acumulado usada no ranking da C1, em pregões (padrão 252)",
     )
     c1_placebo_p.add_argument("--seed", type=int, default=SEED, help="Semente do sorteio aleatório da C3 (padrão 42)")
+
+    e1_p = sub.add_parser(
+        "e1", parents=[common], help="Família E: E1, pairs trading (arbitragem estatística, mercado neutro)"
+    )
+    e1_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
+    e1_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD)")
+    e1_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
+    e1_p.add_argument(
+        "--lookback", type=int, default=E1_LOOKBACK_DAYS, help="Janela do z-score do spread, em pregões (padrão 60)"
+    )
 
     live_p = sub.add_parser("live", parents=[common], help="Loop de paper trading em quase-tempo-real")
     live_p.add_argument("--symbol", required=True, help="Um único símbolo, ex: AAPL, PETR4.SA")
@@ -364,6 +376,18 @@ def main(argv: list[str] | None = None) -> None:
         print_c1_report(c1_result, label="C1 (momentum)")
         print_c1_report(c3_result, label="C3 (placebo aleatório)")
         print_c1_c3_comparison(c1_result, c3_result)
+
+    elif args.command == "e1":
+        results = run_multi_backtest_e1(
+            PAIRS,
+            period=args.period,
+            interval=args.interval,
+            start=args.start,
+            end=args.end,
+            starting_cash=args.cash,
+            lookback_days=args.lookback,
+        )
+        print_multi_e1_report(results)
 
     elif args.command == "live":
         print("AVISO: modo 'live' continua sendo simulado (paper trading). Nenhuma ordem real é enviada.")

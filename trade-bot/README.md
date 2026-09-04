@@ -515,9 +515,41 @@ venda a descoberto é tratado como caixa disponível pra uso, o que é
 mais otimista que uma conta margem real. `compute_round_trip_pnls()`
 já trata os dois lados (comprado e vendido) simetricamente.
 
-Isso ainda não é uma estratégia — é a peça de infraestrutura que faltava
-pra construir uma (ex: pairs trading / mercado neutro), que é o próximo
-passo natural a discutir.
+## Família E — Pairs Trading / Mercado Neutro (E1, em teste)
+
+Primeira estratégia do projeto que não depende do mercado subir pra dar
+lucro: em vez de apostar na direção de um ativo, aposta na
+**convergência** da relação de preço entre dois ativos do mesmo setor —
+compra o que ficou relativamente barato e vende a descoberto o que
+ficou relativamente caro, lucrando quando o spread volta ao normal.
+Estruturalmente diferente de V/B/C/D, só possível agora que a carteira
+suporta short.
+
+Pares testados (`tradebot/backtest_e1.py`), escolhidos por lógica de
+setor — concorrentes diretos, líquidos — **antes** de calcular qualquer
+correlação ou rodar qualquer teste:
+
+- `ITUB4.SA` / `BBDC4.SA` — os dois maiores bancos privados do Brasil
+  (já presentes em `BR_WATCHLIST`).
+- `XOM` / `CVX` — as duas maiores petroleiras integradas dos EUA.
+
+Regras:
+
+- Spread: `log(close_A) - log(close_B)`. Z-score móvel numa janela de
+  60 pregões (causal, sem look-ahead).
+- Entrada: `|z-score| >= 2.0` (vende o lado caro, compra o barato).
+- Saída: `|z-score| <= 0.5` (convergência) ou `|z-score| >= 4.0` (stop —
+  o par pode ter quebrado estruturalmente). Decisão sempre no
+  fechamento de `t`, execução das duas pernas no open de `t+1`.
+- Benchmark: caixa parado (0%), não buy-and-hold — a estratégia é
+  desenhada pra ser neutra ao mercado, comparar com B&H mediria
+  exposição direcional, não qualidade da convergência.
+
+```bash
+python -m tradebot e1 --start 2018-01-01 --end 2024-01-01
+```
+
+Resultado: em aberto — ainda não foi rodado contra dados reais.
 
 ## Rodando os testes
 
@@ -541,6 +573,7 @@ trade-bot/
     backtest_c1.py  Família C: C1, momentum duplo cross-sectional (rotação de carteira)
     backtest_c3.py  Placebo aleatório da C1 (mesma mecânica, seleção sorteada)
     backtest_d1.py  Família D: D1, reversão à média pura por banda de Bollinger (zigue-zague)
+    backtest_e1.py  Família E: E1, pairs trading / mercado neutro (usa short)
     walkforward.py  Roda a estratégia congelada em janelas sequenciais (V1 ou outra, via backtest_fn)
     live.py         Loop de paper trading com persistência de estado
     charts.py       Gráficos PNG (preço, indicadores, sinais de compra/venda)
