@@ -4,8 +4,14 @@ Funciona tanto para ações/índices (ex: "PETR4.SA", "AAPL") quanto para
 criptomoedas (ex: "BTC-USD", "ETH-USD"), sem precisar de chave de API.
 """
 
+import logging
+
 import pandas as pd
 import yfinance as yf
+
+logger = logging.getLogger("tradebot.data")
+
+DOWNLOAD_TIMEOUT_SECONDS = 30
 
 
 def fetch_ohlcv(
@@ -22,7 +28,16 @@ def fetch_ohlcv(
     'AAAA-MM-DD'), usa esse intervalo de datas fixo em vez de `period` —
     necessário para testes fora da amostra (out-of-sample), onde o período
     precisa ser uma janela específica do passado, não "os últimos N anos a
-    partir de hoje"."""
+    partir de hoje".
+
+    O log de progresso (`logger.info`) é emitido a cada download porque,
+    em walk-forward/multi-ativo, dezenas de chamadas de rede acontecem em
+    sequência e sem isso não dá pra distinguir "ainda baixando" de
+    "travou" — e o `logging.StreamHandler` já dá flush a cada linha, então
+    aparece mesmo com a saída redirecionada pra arquivo. `timeout` evita
+    que uma chamada de rede trave indefinidamente: estoura exceção (que
+    quem chama já trata pulando o símbolo) em vez de nunca retornar."""
+    logger.info("Baixando %s (period=%s, interval=%s, start=%s, end=%s)...", symbol, period, interval, start, end)
     if start:
         raw = yf.download(
             symbol,
@@ -31,6 +46,7 @@ def fetch_ohlcv(
             interval=interval,
             progress=False,
             auto_adjust=True,
+            timeout=DOWNLOAD_TIMEOUT_SECONDS,
         )
     else:
         raw = yf.download(
@@ -39,6 +55,7 @@ def fetch_ohlcv(
             interval=interval,
             progress=False,
             auto_adjust=True,
+            timeout=DOWNLOAD_TIMEOUT_SECONDS,
         )
     if raw.empty:
         raise ValueError(f"Nenhum dado retornado para o símbolo '{symbol}'.")

@@ -75,8 +75,9 @@ def run_walk_forward(
     window_results: dict[str, dict[str, BacktestResult]] = {}
     extra_kwargs = backtest_kwargs or {}
 
-    for w_start, w_end in windows:
+    for idx, (w_start, w_end) in enumerate(windows, start=1):
         label = f"{w_start} a {w_end}"
+        logger.info("Janela %d/%d: %s...", idx, len(windows), label)
         results = backtest_fn(
             symbols,
             strategy_cfg,

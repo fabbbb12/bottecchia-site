@@ -32,6 +32,8 @@ from tradebot.markets import resolve_symbols
 from tradebot.strategy import StrategyConfig
 from tradebot.walkforward import print_walk_forward_report, run_walk_forward
 
+logger = logging.getLogger("tradebot.cli")
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -206,6 +208,7 @@ def main(argv: list[str] | None = None) -> None:
                 "b1": run_multi_backtest_b1,
             }
             challenger_kwargs = {"breakout_period": args.breakout_period} if args.challenger == "b1" else None
+            logger.info("V1 concluída. Iniciando walk-forward de %s...", args.challenger.upper())
             wf_challenger = run_walk_forward(
                 symbols,
                 strategy_cfg,
