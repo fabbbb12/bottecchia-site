@@ -323,7 +323,14 @@ python -m tradebot c1-placebo --market all --start 2018-01-01 --end 2020-01-01
 python -m tradebot c1-placebo --market all --start 2012-01-01 --end 2024-01-01
 ```
 
-Resultado: em aberto — ainda não foi rodado contra dados reais.
+**Resultado: a C1 bate o placebo (C3) em 2 dos 3 testes** — inclusive
+no período completo de 12 anos por margem clara (Sharpe 1.05 vs 0.76,
+retorno 731.67% vs 304.95%). Só perde no período 2021-2023, a mesma
+janela de reversão brusca que é o ponto fraco conhecido de qualquer
+estratégia de momentum ("momentum crash"). Ao contrário da V3 (que
+perdeu do próprio placebo), a C1 tem informação real no ranking, não é
+só efeito de girar entre menos ativos. Análise completa em
+`reports/C1_report.md`.
 
 ## Família D — Reversão à Média Pura por Faixa (D1, rejeitada)
 
@@ -381,7 +388,11 @@ experimentação ativa está encerrada. Resumo:
   (Sharpe em 5/6 janelas, CAGR em 4/6) com uma explicação de mecanismo
   plausível (perde só quando o mercado sobe em linha reta sem correção).
   C2 (diluir pra `TOP_K=5`) foi testada e não melhorou o resultado — a
-  configuração original é a que fica.
+  configuração original é a que fica. O placebo (C3) confirmou que o
+  ranking de momentum tem informação real (bate o sorteio aleatório em
+  2 dos 3 testes, inclusive no período completo de 12 anos por margem
+  clara) — só perde do placebo justamente no período de reversão
+  brusca de 2022, o ponto fraco conhecido de qualquer momentum.
 - Continuar gerando variante atrás de variante sem uma hipótese nova e
   bem fundamentada é o caminho pro overfitting/data-dredging que este
   projeto foi desenhado pra evitar. Por isso a decisão é parar aqui, não

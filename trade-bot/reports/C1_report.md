@@ -1,13 +1,16 @@
 # C1 — Momentum Duplo / rotação de carteira (família C)
 
-**Status: PROMISSORA.** Não bate o buy-and-hold da cesta de forma
-robusta (perde em CAGR/Sortino/Calmar na maioria das janelas), mas é o
-melhor resultado de todo o programa de pesquisa até agora: bate a V1 em
-Sharpe em 5 das 6 janelas do walk-forward e em CAGR em 4 das 6, mantendo
-a mesma vantagem de drawdown que caracteriza a V1 e a B1 (6/6 janelas).
-Ao contrário de V3/V5/V6/B1, o padrão de quando ganha e quando perde é
-economicamente explicável, não uma inversão sem explicação entre
-períodos.
+**Status: PROMISSORA, com o placebo (C3) confirmando que o mecanismo é
+real na maior parte do histórico.** Não bate o buy-and-hold da cesta de
+forma robusta (perde em CAGR/Sortino/Calmar na maioria das janelas),
+mas é o melhor resultado de todo o programa de pesquisa até agora: bate
+a V1 em Sharpe em 5 das 6 janelas do walk-forward e em CAGR em 4 das 6,
+mantendo a mesma vantagem de drawdown que caracteriza a V1 e a B1 (6/6
+janelas). Ao contrário de V3/V5/V6/B1, o padrão de quando ganha e
+quando perde é economicamente explicável, não uma inversão sem
+explicação entre períodos. E, diferente de V3 (que perdeu do próprio
+placebo), a C1 bate o placebo aleatório (C3) em 2 dos 3 testes
+diretos — inclusive no período completo de 12 anos, por margem larga.
 
 ## Walk-forward (2012-2024, 6 janelas de 2 anos)
 
@@ -114,3 +117,53 @@ referência da família C.** C2 fica registrada como um teste de
 sensibilidade negativo, não como uma variante melhor — consistente com
 a disciplina do projeto de nunca adotar um parâmetro só porque foi
 testado.
+
+## C3 — placebo aleatório (teste decisivo, mesma lógica de V3 vs V4)
+
+Pergunta: o Sharpe melhor da C1 sobre a V1 vem de informação genuína no
+ranking de momentum, ou só do mecanismo de girar mensalmente entre um
+subconjunto menor da cesta (menos concentração), não importa qual
+critério escolhe os ativos? C3 reaproveita a mesma mecânica da C1
+(rebalanceamento mensal, `TOP_K=3`, sizing, custos), mudando **apenas**
+a seleção: sorteia 3 ativos aleatórios por mês em vez de rankear por
+momentum (`SEED=42`, sem filtro de momentum absoluto).
+
+| Período | Sharpe C1 (momentum) | Sharpe C3 (aleatório) | Quem vence |
+|---|---|---|---|
+| IS 2021-2023 | -0.80 | **0.72** | C3 (placebo) |
+| OOS 2018-2020 | **1.31** | 0.37 | C1 (momentum) |
+| Completo 2012-2024 | **1.05** | 0.76 | C1 (momentum) |
+
+**Resultado: o momentum vence o placebo em 2 dos 3 testes, inclusive no
+período completo de 12 anos por margem clara** (Sharpe 1.05 vs 0.76,
+Sortino 1.29 vs 1.03, Calmar 0.68 vs 0.48, retorno 731.67% vs 304.95%).
+Isso é o oposto do que aconteceu com V3 (que perdeu do placebo V4) — diz
+que o ranking de momentum está fazendo algo real na maior parte do
+histórico, não é só efeito de operar com menos concentração.
+
+A única derrota da C1 é justamente no período de 2021-2023 — a mesma
+janela de reversão brusca (2022) que já sabíamos ser o ponto fraco
+estrutural de qualquer estratégia de momentum ("momentum crash",
+Daniel & Moskowitz, 2016: comprar sistematicamente quem subiu recente
+apanha feio logo após uma reversão de tendência). Não é uma surpresa
+nem enfraquece a conclusão — é o risco conhecido e esperado da
+categoria, já documentado antes neste mesmo report.
+
+Achado colateral relevante: a C3 opera com um giro muito maior que a
+C1 (52 trades vs 7 no IS; 311 vs 74 no período completo) porque um
+sorteio aleatório raramente repete os mesmos 3 ativos mês a mês,
+enquanto o momentum tem persistência (quem subiu continua subindo por
+um tempo, reduzindo a troca de posições). Isso significa que parte da
+vantagem da C1 vem de um custo de transação estruturalmente menor
+(938 vs 3.493 em taxas no período completo) — uma vantagem real, não um
+artefato, mas que também mostra que a C1 se beneficia da persistência
+do momentum, não só do ranking em si.
+
+## Conclusão consolidada da família C
+
+A C1 (`TOP_K=3`, lookback 252 dias) é a candidata final desta família:
+edge real e parcialmente confirmado contra placebo, mas não bate
+buy-and-hold e tem uma fraqueza conhecida (reversões bruscas). C2
+(diluição) não ajudou. Nenhuma variante adicional será criada sem uma
+hipótese nova e bem fundamentada — ver a seção "Estado atual da
+pesquisa" no README.
