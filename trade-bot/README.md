@@ -405,6 +405,35 @@ expectativa correta de que ela reduz drawdown de forma consistente e
 tem uma leve vantagem de Sharpe sobre a V1, mas não deve ser esperada
 para bater simplesmente comprar e segurar os mesmos ativos.
 
+## Teste de robustez do universo (viés de sobrevivência)
+
+Pergunta levantada depois da fase de pesquisa: será que "nada bate
+buy-and-hold" é um achado sobre técnica de trading, ou um artefato de
+testar contra uma cesta concentrada em 5 mega caps de tecnologia dos
+EUA (AAPL, MSFT, NVDA, AMZN, GOOGL) — vencedoras conhecidas em
+retrospecto, incluindo o rali de IA da NVDA, um dos maiores retornos de
+ação única da história recente? Isso é diferente de "testar mais uma
+variante de estratégia" — é testar um viés no próprio desenho do
+experimento, por isso reabrir essa pergunta específica não contradiz a
+decisão de fechar a fase de novas técnicas.
+
+`US_DIVERSIFIED_WATCHLIST` (`tradebot/markets.py`) substitui as 5 mega
+caps de tecnologia por 5 ações grandes e líquidas de setores
+DIFERENTES — Financeiro (JPM), Saúde (JNJ), Consumo básico (PG),
+Energia (XOM), Industrial (CAT) — escolhidas por representar setores
+diferentes, não por terem tido retorno bom ou ruim (decidido antes de
+rodar qualquer teste, mesma disciplina do resto do projeto). A cesta
+brasileira (`BR_WATCHLIST`) já era razoavelmente diversificada e fica
+igual. Novo `--market diversified` usa essa cesta.
+
+```bash
+python -m tradebot backtest --market diversified --start 2012-01-01 --end 2024-01-01
+python -m tradebot c1 --market diversified --start 2012-01-01 --end 2024-01-01
+python -m tradebot compare --market diversified --start 2021-01-01 --end 2023-01-01
+```
+
+Resultado: em aberto — ainda não foi rodado contra dados reais.
+
 ## Rodando os testes
 
 ```bash
@@ -430,7 +459,7 @@ trade-bot/
     walkforward.py  Roda a estratégia congelada em janelas sequenciais (V1 ou outra, via backtest_fn)
     live.py         Loop de paper trading com persistência de estado
     charts.py       Gráficos PNG (preço, indicadores, sinais de compra/venda)
-    markets.py      Watchlists prontas (EUA, Bovespa) e resolução de símbolos
+    markets.py      Watchlists prontas (EUA, Bovespa, EUA diversificado) e resolução de símbolos
     cli.py          Interface de linha de comando
   tests/            Testes unitários (indicadores, estratégia, carteira)
 ```

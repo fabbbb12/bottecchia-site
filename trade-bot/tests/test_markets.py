@@ -1,6 +1,6 @@
 import pytest
 
-from tradebot.markets import BR_WATCHLIST, US_WATCHLIST, resolve_symbols
+from tradebot.markets import BR_WATCHLIST, US_DIVERSIFIED_WATCHLIST, US_WATCHLIST, resolve_symbols
 
 
 def test_resolve_symbols_market_us():
@@ -32,3 +32,17 @@ def test_resolve_symbols_dedupes_preserving_order():
 def test_resolve_symbols_unknown_market_raises():
     with pytest.raises(ValueError):
         resolve_symbols("xx", None)
+
+
+def test_resolve_symbols_market_diversified_has_diversified_us_and_br():
+    result = resolve_symbols("diversified", None)
+    for s in US_DIVERSIFIED_WATCHLIST + BR_WATCHLIST:
+        assert s in result
+    # não deve trazer os mega caps de tecnologia da US_WATCHLIST original
+    for s in US_WATCHLIST:
+        assert s not in result
+
+
+def test_diversified_watchlist_same_size_as_original_us_watchlist():
+    # mesmo tamanho, pra comparação justa (só muda a composição setorial)
+    assert len(US_DIVERSIFIED_WATCHLIST) == len(US_WATCHLIST)
