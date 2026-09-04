@@ -304,7 +304,7 @@ def run_backtest_c1(
     )
 
 
-def print_c1_report(result: PortfolioBacktestResult) -> None:
+def print_c1_report(result: PortfolioBacktestResult, label: str = "C1 (Momentum Duplo)") -> None:
     s = result.final_summary
     m = result.metrics
     bm = result.benchmark_metrics
@@ -313,7 +313,7 @@ def print_c1_report(result: PortfolioBacktestResult) -> None:
     bench_end = result.benchmark_curve.iloc[-1]
     bench_pnl_pct = (bench_end - bench_start) / bench_start * 100 if bench_start else 0.0
 
-    print(f"\n=== C1 (Momentum Duplo) — carteira rotativa entre {len(result.symbols)} ativos (SIMULADO / PAPER) ===")
+    print(f"\n=== {label} — carteira rotativa entre {len(result.symbols)} ativos (SIMULADO / PAPER) ===")
     print(f"Ativos: {', '.join(result.symbols)}")
     print(f"Caixa final:          {s['cash']:.2f}")
     print(f"Patrimônio final:     {s['equity']:.2f}")
@@ -321,9 +321,9 @@ def print_c1_report(result: PortfolioBacktestResult) -> None:
     print(f"Buy-and-hold da cesta (igual peso, sem rebalancear): {bench_pnl_pct:.2f}%")
     diff = s["pnl_pct"] - bench_pnl_pct
     comparativo = "supera" if diff > 0 else "fica atrás d" if diff < 0 else "empata com"
-    print(f"=> C1 {comparativo}o buy-and-hold da cesta em {diff:+.2f} pontos percentuais")
+    print(f"=> {label} {comparativo}o buy-and-hold da cesta em {diff:+.2f} pontos percentuais")
 
-    print(f"\n{'Métrica':<22}{'C1':>14}{'B&H cesta':>14}")
+    print(f"\n{'Métrica':<22}{'Estratégia':>14}{'B&H cesta':>14}")
     print("-" * 50)
     print(f"{'CAGR':<22}{m['cagr_pct']:>13.2f}%{bm['cagr_pct']:>13.2f}%")
     print(f"{'Máx. drawdown':<22}{m['max_drawdown_pct']:>13.2f}%{bm['max_drawdown_pct']:>13.2f}%")

@@ -308,6 +308,23 @@ vs 11.87%, e piorou justamente numa das janelas que motivaram o teste).
 **Decisão: `TOP_K=3` (configuração original da C1) fica como a
 referência da família C.** Detalhes em `reports/C1_report.md`.
 
+**Placebo (C3):** mesma dúvida que já resolvemos pra V3 (V3 vs V4) —
+o Sharpe melhor da C1 vem de informação genuína no ranking de momentum,
+ou só do mecanismo de girar entre um subconjunto menor da cesta? A C3
+(`tradebot/backtest_c3.py`) reaproveita a mesma mecânica da C1
+(rebalanceamento mensal, `TOP_K`, sizing, custos) trocando **apenas** a
+seleção: em vez de rankear por momentum, sorteia `TOP_K` ativos
+aleatoriamente a cada mês (`SEED=42`, mesmo valor já usado no placebo
+da V1, sem filtro de momentum absoluto — sempre 100% alocada).
+
+```bash
+python -m tradebot c1-placebo --market all --start 2021-01-01 --end 2023-01-01
+python -m tradebot c1-placebo --market all --start 2018-01-01 --end 2020-01-01
+python -m tradebot c1-placebo --market all --start 2012-01-01 --end 2024-01-01
+```
+
+Resultado: em aberto — ainda não foi rodado contra dados reais.
+
 ## Família D — Reversão à Média Pura por Faixa (D1, rejeitada)
 
 Pedido do usuário: um sistema que opere com mais frequência, comprando
@@ -397,6 +414,7 @@ trade-bot/
     backtest_v2.py  Experimentos alternativos (V2 rejeitada) + comparação V1×V2
     backtest_b1.py  Família B: B1, rompimento puro (trend following)
     backtest_c1.py  Família C: C1, momentum duplo cross-sectional (rotação de carteira)
+    backtest_c3.py  Placebo aleatório da C1 (mesma mecânica, seleção sorteada)
     backtest_d1.py  Família D: D1, reversão à média pura por banda de Bollinger (zigue-zague)
     walkforward.py  Roda a estratégia congelada em janelas sequenciais (V1 ou outra, via backtest_fn)
     live.py         Loop de paper trading com persistência de estado
