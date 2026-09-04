@@ -12,6 +12,12 @@ explicação entre períodos. E, diferente de V3 (que perdeu do próprio
 placebo), a C1 bate o placebo aleatório (C3) em 2 dos 3 testes
 diretos — inclusive no período completo de 12 anos, por margem larga.
 
+**Achado mais importante desta seção: no universo diversificado (sem
+mega caps de tecnologia), a C1 bate o Sharpe do buy-and-hold nos 3
+testes (IS, OOS e período completo)** — a primeira vez em todo o
+projeto que isso acontece de forma consistente. Ver seção "Teste de
+universo diversificado" abaixo.
+
 ## Walk-forward (2012-2024, 6 janelas de 2 anos)
 
 | Janela | Retorno C1/B&H | CAGR C1/B&H | DD C1/B&H | Sharpe C1/B&H | Sortino C1/B&H | Calmar C1/B&H |
@@ -159,11 +165,46 @@ vantagem da C1 vem de um custo de transação estruturalmente menor
 artefato, mas que também mostra que a C1 se beneficia da persistência
 do momentum, não só do ranking em si.
 
+## Teste de universo diversificado (viés de sobrevivência)
+
+Pergunta do usuário: será que "nada bate buy-and-hold" é um achado
+sobre técnica, ou artefato de testar contra uma cesta com 5 mega caps
+de tecnologia dominadas pelo rali de IA da NVDA (um dos maiores
+retornos de ação única da história)? `US_DIVERSIFIED_WATCHLIST`
+substitui essas 5 por 5 ações de setores diferentes (JPM, JNJ, PG, XOM,
+CAT — escolhidas por setor, não por retorno), mesmo tamanho, cesta
+brasileira igual.
+
+| Período | Sharpe C1 | Sharpe B&H | C1 vence? | CAGR C1 | CAGR B&H |
+|---|---|---|---|---|---|
+| IS 2021-2023 | **0.94** | 0.87 | Sim | 12.66% | 14.56% |
+| OOS 2018-2020 | **1.42** | 1.02 | Sim | 13.73% | 16.39% |
+| Completo 2012-2024 | **0.73** | 0.71 | Sim (por pouco) | 10.16% | 20.09% |
+
+**A C1 bate o Sharpe do buy-and-hold nos 3 testes — a primeira vez em
+todo o projeto que isso acontece de forma consistente**, com folga
+maior no OOS (1.42 vs 1.02) e no drawdown em todos os três (ex:
+-22.88% vs -34.77% no período completo, quase metade). Sortino e
+Calmar só vencem no OOS; CAGR/retorno bruto continuam perdendo nos 3
+(embora por margem muito menor que na cesta de tech: o buy-and-hold do
+período completo caiu de +4011% pra +798% — a NVDA sozinha explicava a
+maior parte da distância antes vista).
+
+**Conclusão: a suspeita do usuário estava certa.** Boa parte do "nada
+bate buy-and-hold" das famílias V/B/D vinha de testar contra uma cesta
+concentrada num dos maiores vencedores de ação única da história, não
+de uma verdade universal sobre timing de mercado. Isso não muda a
+classificação de V2-V6/B1/D1 (foram rejeitadas por reverter IS→OOS
+contra a própria V1, um problema diferente e que persiste independente
+do universo) — mas muda a leitura sobre a C1: o edge de Sharpe é mais
+robusto do que parecia, e mais visível fora da bolha de tech.
+
 ## Conclusão consolidada da família C
 
 A C1 (`TOP_K=3`, lookback 252 dias) é a candidata final desta família:
-edge real e parcialmente confirmado contra placebo, mas não bate
-buy-and-hold e tem uma fraqueza conhecida (reversões bruscas). C2
-(diluição) não ajudou. Nenhuma variante adicional será criada sem uma
-hipótese nova e bem fundamentada — ver a seção "Estado atual da
-pesquisa" no README.
+edge real (confirmado contra placebo E robusto fora da cesta de tech),
+bate o Sharpe do buy-and-hold de forma consistente no universo
+diversificado, mas ainda não bate CAGR/retorno bruto e tem uma
+fraqueza conhecida (reversões bruscas de momentum). C2 (diluição) não
+ajudou. Próximo teste natural: cripto (ver README, "Teste de universo
+cripto").

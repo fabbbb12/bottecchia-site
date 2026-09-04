@@ -1,6 +1,12 @@
 import pytest
 
-from tradebot.markets import BR_WATCHLIST, US_DIVERSIFIED_WATCHLIST, US_WATCHLIST, resolve_symbols
+from tradebot.markets import (
+    BR_WATCHLIST,
+    CRYPTO_WATCHLIST,
+    US_DIVERSIFIED_WATCHLIST,
+    US_WATCHLIST,
+    resolve_symbols,
+)
 
 
 def test_resolve_symbols_market_us():
@@ -46,3 +52,13 @@ def test_resolve_symbols_market_diversified_has_diversified_us_and_br():
 def test_diversified_watchlist_same_size_as_original_us_watchlist():
     # mesmo tamanho, pra comparação justa (só muda a composição setorial)
     assert len(US_DIVERSIFIED_WATCHLIST) == len(US_WATCHLIST)
+
+
+def test_resolve_symbols_market_crypto():
+    assert resolve_symbols("crypto", None) == CRYPTO_WATCHLIST
+
+
+def test_crypto_watchlist_tickers_use_usd_suffix():
+    # formato aceito pelo yfinance pra cripto, sem precisar de API da corretora
+    for s in CRYPTO_WATCHLIST:
+        assert s.endswith("-USD")

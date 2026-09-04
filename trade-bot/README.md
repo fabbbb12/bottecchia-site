@@ -432,6 +432,54 @@ python -m tradebot c1 --market diversified --start 2012-01-01 --end 2024-01-01
 python -m tradebot compare --market diversified --start 2021-01-01 --end 2023-01-01
 ```
 
+**Resultado: a suspeita se confirma.** No universo diversificado, a C1
+bate o Sharpe do buy-and-hold nos 3 testes (IS, OOS e período
+completo) — a primeira vez em todo o projeto que isso acontece de
+forma consistente:
+
+| Período | Sharpe C1 | Sharpe B&H |
+|---|---|---|
+| IS 2021-2023 | **0.94** | 0.87 |
+| OOS 2018-2020 | **1.42** | 1.02 |
+| Completo 2012-2024 | **0.73** | 0.71 |
+
+O buy-and-hold do período completo também caiu de +4011% (cesta de
+tech) pra +798% (cesta diversificada) — a NVDA sozinha explicava a
+maior parte da distância "impossível de bater" que víamos antes. CAGR/
+Sortino/Calmar ainda não vencem de forma consistente, mas a distância
+encolheu bastante. Boa parte do "nada bate buy-and-hold" das famílias
+V/B/D era mesmo um artefato da cesta de teste, não uma verdade
+universal sobre timing de mercado. Análise completa em
+`reports/C1_report.md`.
+
+## Teste de universo cripto (Binance, viés de sobrevivência estrutural)
+
+Pedido do usuário. `CRYPTO_WATCHLIST` (`tradebot/markets.py`) traz as 5
+criptomoedas de maior capitalização negociadas na Binance — BTC-USD,
+ETH-USD, BNB-USD, SOL-USD, XRP-USD (tickers yfinance, sem precisar de
+conta/API da corretora).
+
+**Aviso importante, diferente do universo diversificado acima:** aqui
+o viés de sobrevivência é estrutural e não dá pra neutralizar do mesmo
+jeito. "Top 5 por capitalização hoje" é, quase por definição, "as 5 que
+mais valorizaram desde que foram lançadas" — a esmagadora maioria das
+milhares de criptomoedas que já existiram (era ICO 2017-2018,
+principalmente) não existe mais ou vale perto de zero, e não há como
+reconstruir de graça "o top 5 por capitalização em cada ano". Esse
+teste mostra como a C1 se comporta num mercado de altíssima
+volatilidade e giro 24/7 — não é um teste livre de viés, e deve ser
+lido com essa ressalva.
+
+Histórico disponível é desigual: BTC-USD desde ~2014, ETH/BNB/XRP desde
+~2017, SOL-USD só desde ~2020 (rede lançada em 2020) — pra períodos
+antes de abril/2020, tire `SOL-USD` da lista com `--symbols` em vez de
+`--market crypto`.
+
+```bash
+python -m tradebot c1 --market crypto --start 2021-01-01 --end 2023-01-01
+python -m tradebot c1 --market crypto --start 2020-05-01 --end 2024-01-01
+```
+
 Resultado: em aberto — ainda não foi rodado contra dados reais.
 
 ## Rodando os testes
@@ -459,7 +507,7 @@ trade-bot/
     walkforward.py  Roda a estratégia congelada em janelas sequenciais (V1 ou outra, via backtest_fn)
     live.py         Loop de paper trading com persistência de estado
     charts.py       Gráficos PNG (preço, indicadores, sinais de compra/venda)
-    markets.py      Watchlists prontas (EUA, Bovespa, EUA diversificado) e resolução de símbolos
+    markets.py      Watchlists prontas (EUA, Bovespa, EUA diversificado, cripto) e resolução de símbolos
     cli.py          Interface de linha de comando
   tests/            Testes unitários (indicadores, estratégia, carteira)
 ```
