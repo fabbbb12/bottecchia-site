@@ -41,6 +41,19 @@ Sizing, custos e universo: idênticos à V1/B1 (fração fixa do caixa por
 compra, mesma taxa/slippage, mesmos 11 ativos de US_WATCHLIST +
 BR_WATCHLIST). Arquitetura: uma carteira independente por ativo, como
 V1/B1 — não uma carteira cross-sectional como a C1.
+
+RESULTADO: EXPERIMENTO REJEITADO (IS 2021-2023, OOS 2018-2020, walk-
+forward 2012-2024 em 6 janelas). Melhora forte no IS (bate a V1 em 7/11
+ativos em quase toda métrica), mas essa vantagem se INVERTE no OOS
+(perde de V1 em retorno e Sharpe) — o mesmo padrão que já reprovou
+V3/V5/V6, agora confirmado pela quarta vez com um mecanismo totalmente
+diferente (banda de Bollinger em vez de Fibonacci/Volume), o que reforça
+o achado consolidado em vez de ser um caso isolado. No agregado de 66
+combinações janela×ativo do walk-forward, a D1 tem o melhor recorde de
+drawdown do projeto (66/66, nunca perde do buy-and-hold) e edge marginal
+de Sharpe/Calmar médio sobre a V1 — mas só bate a V1 em Sharpe em 3 das
+6 janelas, sem um padrão de regime que explique a divisão. Ver
+reports/D1_report.md para a análise completa.
 """
 
 import logging

@@ -55,6 +55,16 @@ redução de drawdown, não um gerador de retorno superior ao buy-and-hold.**
   novo — é a mesma característica da V1, só mais extrema, trocando
   ainda mais retorno por menos dor. Nunca bate o buy-and-hold. Detalhes
   completos em `reports/B1_report.md` e `tradebot/backtest_b1.py`.
+- **D1** (nova família D, reversão à média pura por banda de Bollinger,
+  buscando capturar o zigue-zague do preço): também rejeitada, mesmo
+  padrão de V3/V5/V6 — melhora forte no IS (2021-2023), reverte no OOS
+  (2018-2020). É a quarta confirmação desse padrão, agora com um
+  mecanismo totalmente diferente (Bollinger, não Fibonacci/Volume), o
+  que reforça o achado consolidado em vez de ser um caso isolado. Tem o
+  melhor recorde de drawdown do projeto (66/66 no walk-forward
+  agregado), mas só bate a V1 em Sharpe em 3 das 6 janelas, sem padrão
+  de regime que explique a divisão. Detalhes completos em
+  `reports/D1_report.md`.
 
 Ou seja: útil para quem valoriza uma trajetória com menos dor no pior
 momento e aceita abrir mão de retorno para isso; **não é** uma estratégia
@@ -293,7 +303,7 @@ vista em V3/V5/V6/B1. Análise completa e recomendação de próximo passo
 pré-registrada, ainda sem resultado** — mesma engine da C1, ver
 `reports/C1_report.md` para o parâmetro congelado.
 
-## Família D — Reversão à Média Pura por Faixa (D1, em teste)
+## Família D — Reversão à Média Pura por Faixa (D1, rejeitada)
 
 Pedido do usuário: um sistema que opere com mais frequência, comprando
 perto de mínimas locais e vendendo perto de máximas locais — capturando
@@ -322,7 +332,14 @@ python -m tradebot compare --market all --start 2021-01-01 --end 2023-01-01 --ch
 python -m tradebot walkforward --market all --start 2012-01-01 --end 2024-01-01 --window-years 2 --challenger d1
 ```
 
-Resultado: em aberto — ainda não foi rodado contra dados reais.
+**Resultado: EXPERIMENTO REJEITADO.** Melhora forte no IS (2021-2023),
+mas a vantagem se inverte no OOS (2018-2020) — o mesmo padrão que já
+reprovou V3/V5/V6, agora confirmado pela quarta vez com um mecanismo
+totalmente diferente (Bollinger em vez de Fibonacci/Volume), reforçando
+o achado consolidado em vez de ser um caso isolado. No walk-forward
+completo tem o melhor recorde de drawdown do projeto (66/66), mas só
+bate a V1 em Sharpe em 3 das 6 janelas, sem padrão de regime que
+explique a divisão. Análise completa em `reports/D1_report.md`.
 
 ## Rodando os testes
 
