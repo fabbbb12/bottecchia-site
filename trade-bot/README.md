@@ -497,6 +497,28 @@ uma estratégia de momentum. **Conclusão: o edge da C1 não é universal**
 — funciona melhor em ações diversificadas com correlação mais baixa,
 não em cripto. Análise completa em `reports/C1_report.md`.
 
+## Venda a descoberto (short) — infraestrutura nova
+
+Até aqui a carteira só suportava posição comprada (long-only), o que
+eliminava de cara toda uma classe de estratégia (pairs trading, mercado
+neutro) que não depende de o mercado subir pra dar lucro. Diferente das
+outras limitações do projeto (rede bloqueada, sem dado intraday
+histórico de qualidade, sem fundamentalista point-in-time sem viés de
+look-ahead), essa era pura limitação de código, sem depender de nenhum
+dado externo — por isso foi resolvida.
+
+`Portfolio.short()`/`Portfolio.cover()` (`tradebot/portfolio.py`) abrem
+e fecham posição vendida, com a mesma lógica de taxa/slippage do
+`buy()`/`sell()`. **Simplificação documentada:** não modela chamada de
+margem nem custo de aluguel de ação (borrow cost) — o caixa recebido na
+venda a descoberto é tratado como caixa disponível pra uso, o que é
+mais otimista que uma conta margem real. `compute_round_trip_pnls()`
+já trata os dois lados (comprado e vendido) simetricamente.
+
+Isso ainda não é uma estratégia — é a peça de infraestrutura que faltava
+pra construir uma (ex: pairs trading / mercado neutro), que é o próximo
+passo natural a discutir.
+
 ## Rodando os testes
 
 ```bash
@@ -511,7 +533,7 @@ trade-bot/
     data.py        Coleta de dados (yfinance)
     indicators.py  SMA, EMA, RSI, MACD, Bandas de Bollinger
     strategy.py     Combina indicadores em um sinal (BUY/SELL/HOLD)
-    portfolio.py    Carteira simulada (caixa, posições, taxas, slippage)
+    portfolio.py    Carteira simulada (caixa, posições, taxas, slippage, compra e venda a descoberto)
     backtest.py     V1: roda a estratégia sobre histórico, métricas (Sharpe/
                     Sortino/Calmar/CAGR/Profit Factor) e relatório
     backtest_v2.py  Experimentos alternativos (V2 rejeitada) + comparação V1×V2
