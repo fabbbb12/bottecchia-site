@@ -57,7 +57,7 @@ def build_parser() -> argparse.ArgumentParser:
     backtest_p = sub.add_parser("backtest", parents=[common], help="Roda a estratégia sobre dados históricos")
     backtest_p.add_argument("--symbol", help="Um único símbolo, ex: AAPL, PETR4.SA")
     backtest_p.add_argument("--symbols", help="Lista separada por vírgula, ex: AAPL,MSFT,PETR4.SA")
-    backtest_p.add_argument("--market", choices=["us", "br", "all", "diversified", "crypto"], help="Usa uma watchlist pronta (EUA, Bovespa, ambas, EUA diversificado por setor, ou cripto)")
+    backtest_p.add_argument("--market", choices=["us", "br", "all", "diversified", "crypto", "broad"], help="Usa uma watchlist pronta (EUA, Bovespa, ambas, EUA diversificado por setor, cripto, ou EUA amplo diversificado — 22 ativos)")
     backtest_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
     backtest_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD) — use para testes fora da amostra")
     backtest_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional — padrão é hoje")
@@ -69,7 +69,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     wf_p.add_argument("--symbol", help="Um único símbolo, ex: AAPL, PETR4.SA")
     wf_p.add_argument("--symbols", help="Lista separada por vírgula, ex: AAPL,MSFT,PETR4.SA")
-    wf_p.add_argument("--market", choices=["us", "br", "all", "diversified", "crypto"], help="Usa uma watchlist pronta (EUA, Bovespa, ambas, EUA diversificado por setor, ou cripto)")
+    wf_p.add_argument("--market", choices=["us", "br", "all", "diversified", "crypto", "broad"], help="Usa uma watchlist pronta (EUA, Bovespa, ambas, EUA diversificado por setor, cripto, ou EUA amplo diversificado — 22 ativos)")
     wf_p.add_argument("--start", required=True, help="Início do período total (AAAA-MM-DD)")
     wf_p.add_argument("--end", required=True, help="Fim do período total (AAAA-MM-DD)")
     wf_p.add_argument("--window-years", type=float, default=2.0, help="Tamanho de cada janela, em anos")
@@ -93,7 +93,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     compare_p.add_argument("--symbol", help="Um único símbolo, ex: AAPL, PETR4.SA")
     compare_p.add_argument("--symbols", help="Lista separada por vírgula, ex: AAPL,MSFT,PETR4.SA")
-    compare_p.add_argument("--market", choices=["us", "br", "all", "diversified", "crypto"], help="Usa uma watchlist pronta (EUA, Bovespa, ambas, EUA diversificado por setor, ou cripto)")
+    compare_p.add_argument("--market", choices=["us", "br", "all", "diversified", "crypto", "broad"], help="Usa uma watchlist pronta (EUA, Bovespa, ambas, EUA diversificado por setor, cripto, ou EUA amplo diversificado — 22 ativos)")
     compare_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
     compare_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD)")
     compare_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
@@ -122,7 +122,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     placebo_p.add_argument("--symbol", help="Um único símbolo, ex: AAPL, PETR4.SA")
     placebo_p.add_argument("--symbols", help="Lista separada por vírgula, ex: AAPL,MSFT,PETR4.SA")
-    placebo_p.add_argument("--market", choices=["us", "br", "all", "diversified", "crypto"], help="Usa uma watchlist pronta (EUA, Bovespa, ambas, EUA diversificado por setor, ou cripto)")
+    placebo_p.add_argument("--market", choices=["us", "br", "all", "diversified", "crypto", "broad"], help="Usa uma watchlist pronta (EUA, Bovespa, ambas, EUA diversificado por setor, cripto, ou EUA amplo diversificado — 22 ativos)")
     placebo_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
     placebo_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD)")
     placebo_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
@@ -131,7 +131,7 @@ def build_parser() -> argparse.ArgumentParser:
         "c1", parents=[common], help="Família C: C1, momentum duplo cross-sectional (rotação de carteira)"
     )
     c1_p.add_argument("--symbols", help="Lista separada por vírgula, ex: AAPL,MSFT,PETR4.SA")
-    c1_p.add_argument("--market", choices=["us", "br", "all", "diversified", "crypto"], help="Usa uma watchlist pronta (EUA, Bovespa, ambas, EUA diversificado por setor, ou cripto)")
+    c1_p.add_argument("--market", choices=["us", "br", "all", "diversified", "crypto", "broad"], help="Usa uma watchlist pronta (EUA, Bovespa, ambas, EUA diversificado por setor, cripto, ou EUA amplo diversificado — 22 ativos)")
     c1_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
     c1_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD)")
     c1_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
@@ -152,7 +152,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     c1_placebo_p.add_argument("--symbols", help="Lista separada por vírgula, ex: AAPL,MSFT,PETR4.SA")
     c1_placebo_p.add_argument(
-        "--market", choices=["us", "br", "all", "diversified", "crypto"], help="Usa uma watchlist pronta (EUA, Bovespa, ambas, EUA diversificado por setor, ou cripto)"
+        "--market", choices=["us", "br", "all", "diversified", "crypto", "broad"], help="Usa uma watchlist pronta (EUA, Bovespa, ambas, EUA diversificado por setor, cripto, ou EUA amplo diversificado — 22 ativos)"
     )
     c1_placebo_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
     c1_placebo_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD)")

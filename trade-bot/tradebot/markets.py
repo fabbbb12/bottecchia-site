@@ -41,6 +41,37 @@ US_DIVERSIFIED_WATCHLIST = ["JPM", "JNJ", "PG", "XOM", "CAT"]
 # SOL-USD da lista ou use --start a partir dessa data.
 CRYPTO_WATCHLIST = ["BTC-USD", "ETH-USD", "BNB-USD", "SOL-USD", "XRP-USD"]
 
+# Extensão direta da US_DIVERSIFIED_WATCHLIST: a C1 mostrou edge real
+# de Sharpe sobre a V1 e sobre buy-and-hold no universo diversificado
+# de 5 ativos (ver reports/C1_report.md) — hipótese de que correlação
+# mais baixa entre ativos ajuda o ranking de momentum cross-sectional.
+# Esta lista testa se isso se sustenta (ou fica ainda melhor) num
+# universo bem maior: 2 ações grandes e líquidas por setor GICS (11
+# setores x 2 = 22), escolhidas ANTES de rodar qualquer teste, pela
+# mesma regra de sempre (nome grande e conhecido do setor, não retorno
+# passado). Evita deliberadamente as 5 mega caps de tecnologia já
+# excluídas da US_DIVERSIFIED_WATCHLIST (AAPL, MSFT, NVDA, AMZN, GOOGL)
+# — MSFT aqui é o único repetido, como representante de Tecnologia.
+US_BROAD_WATCHLIST = [
+    "MSFT", "CSCO",   # Tecnologia
+    "JPM", "BAC",     # Financeiro
+    "JNJ", "UNH",     # Saúde
+    "HD", "MCD",      # Consumo discricionário
+    "PG", "KO",       # Consumo básico
+    "XOM", "CVX",     # Energia
+    "CAT", "HON",     # Industrial
+    "NEE", "DUK",     # Utilidades
+    "LIN", "SHW",     # Materiais
+    "PLD", "AMT",     # Imobiliário
+    "VZ", "DIS",      # Comunicação
+]
+
+# TOP_K proporcional ao tamanho do universo, pra manter o mesmo nível
+# de concentração da C1 original (3 de 11 = ~27%): 7 de 22 = ~32%,
+# decidido agora, antes de qualquer resultado — não depois de ver o
+# que "funcionaria melhor".
+BROAD_TOP_K = 7
+
 
 def resolve_symbols(market: str | None, symbols_arg: str | None) -> list[str]:
     """Resolve a lista final de símbolos a partir de `--symbols` e/ou `--market`."""
@@ -60,8 +91,10 @@ def resolve_symbols(market: str | None, symbols_arg: str | None) -> list[str]:
             symbols.extend(US_DIVERSIFIED_WATCHLIST + BR_WATCHLIST)
         elif market == "crypto":
             symbols.extend(CRYPTO_WATCHLIST)
+        elif market == "broad":
+            symbols.extend(US_BROAD_WATCHLIST + BR_WATCHLIST)
         else:
-            raise ValueError(f"Mercado desconhecido: '{market}' (use us, br, all, diversified ou crypto)")
+            raise ValueError(f"Mercado desconhecido: '{market}' (use us, br, all, diversified, crypto ou broad)")
 
     # remove duplicatas preservando ordem
     seen = set()

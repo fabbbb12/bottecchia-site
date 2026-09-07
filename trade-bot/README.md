@@ -602,6 +602,26 @@ desenho é o mais simples possível de pairs trading (hedge ratio fixo
 mais sofisticada poderia ter resultado diferente, mas isso é trabalho
 futuro. Análise completa em `reports/E1_report.md`.
 
+## Teste de universo amplo pra C1 (22 ações, 2 por setor GICS)
+
+Extensão direta do teste de universo diversificado: a C1 mostrou edge
+real de Sharpe no universo de 5 ações (uma por setor) — este teste
+verifica se isso se sustenta (ou melhora) com uma cesta bem maior e
+ainda mais diversificada. `US_BROAD_WATCHLIST` (`tradebot/markets.py`)
+traz 2 ações grandes e líquidas por setor GICS (22 no total, exclui
+deliberadamente as 5 mega caps de tecnologia da lista original, exceto
+MSFT como única representante de Tecnologia) + `BR_WATCHLIST` = 28
+ativos. `BROAD_TOP_K = 7` (proporcional ao `TOP_K=3` original — mantém
+~27-32% de concentração), decidido antes de rodar qualquer teste.
+
+```bash
+python -m tradebot c1 --market broad --top-k 7 --start 2021-01-01 --end 2023-01-01
+python -m tradebot c1 --market broad --top-k 7 --start 2018-01-01 --end 2020-01-01
+python -m tradebot c1 --market broad --top-k 7 --start 2012-01-01 --end 2024-01-01
+```
+
+Resultado: em aberto — ainda não foi rodado contra dados reais.
+
 ## Rodando os testes
 
 ```bash
@@ -629,7 +649,7 @@ trade-bot/
     walkforward.py  Roda a estratégia congelada em janelas sequenciais (V1 ou outra, via backtest_fn)
     live.py         Loop de paper trading com persistência de estado
     charts.py       Gráficos PNG (preço, indicadores, sinais de compra/venda)
-    markets.py      Watchlists prontas (EUA, Bovespa, EUA diversificado, cripto) e resolução de símbolos
+    markets.py      Watchlists prontas (EUA, Bovespa, EUA diversificado, EUA amplo, cripto) e resolução de símbolos
     cli.py          Interface de linha de comando
   tests/            Testes unitários (indicadores, estratégia, carteira)
 ```

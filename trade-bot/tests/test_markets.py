@@ -2,7 +2,9 @@ import pytest
 
 from tradebot.markets import (
     BR_WATCHLIST,
+    BROAD_TOP_K,
     CRYPTO_WATCHLIST,
+    US_BROAD_WATCHLIST,
     US_DIVERSIFIED_WATCHLIST,
     US_WATCHLIST,
     resolve_symbols,
@@ -62,3 +64,24 @@ def test_crypto_watchlist_tickers_use_usd_suffix():
     # formato aceito pelo yfinance pra cripto, sem precisar de API da corretora
     for s in CRYPTO_WATCHLIST:
         assert s.endswith("-USD")
+
+
+def test_resolve_symbols_market_broad_has_broad_us_and_br():
+    result = resolve_symbols("broad", None)
+    for s in US_BROAD_WATCHLIST + BR_WATCHLIST:
+        assert s in result
+
+
+def test_broad_watchlist_excludes_original_mega_caps_except_msft():
+    # evita deliberadamente a concentração de tech da US_WATCHLIST original
+    for s in ["AAPL", "NVDA", "AMZN", "GOOGL"]:
+        assert s not in US_BROAD_WATCHLIST
+    assert "MSFT" in US_BROAD_WATCHLIST  # único repetido, representa Tecnologia
+
+
+def test_broad_watchlist_has_no_duplicate_tickers():
+    assert len(US_BROAD_WATCHLIST) == len(set(US_BROAD_WATCHLIST))
+
+
+def test_broad_top_k_is_proportional_and_smaller_than_universe():
+    assert 0 < BROAD_TOP_K < len(US_BROAD_WATCHLIST)
