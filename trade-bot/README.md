@@ -620,7 +620,21 @@ python -m tradebot c1 --market broad --top-k 7 --start 2018-01-01 --end 2020-01-
 python -m tradebot c1 --market broad --top-k 7 --start 2012-01-01 --end 2024-01-01
 ```
 
-Resultado: em aberto — ainda não foi rodado contra dados reais.
+**Resultado: hipótese de escala NÃO confirmada — o universo maior
+piorou a consistência.**
+
+| Período | Sharpe C1 (28 ativos) | Sharpe B&H | (referência: 5 ativos) |
+|---|---|---|---|
+| IS 2021-2023 | **-0.28** | 0.80 | C1 0.94 (vencia) |
+| OOS 2018-2020 | 1.27 | 1.31 | C1 1.42 (vencia) |
+| Completo 2012-2024 | 0.63 | 0.43 | C1 0.73 (vencia) |
+
+No IS, a C1 no universo amplo vai mal de forma severa (profit factor de
+0.04) — justamente onde o universo de 5 ações tinha a vitória mais
+clara. **Decisão: a configuração de referência da C1 continua sendo o
+universo diversificado de 5 ações, não o amplo** — escalar não é, por
+si só, uma alavanca de melhora. Análise completa em
+`reports/C1_report.md`.
 
 ## Rodando os testes
 

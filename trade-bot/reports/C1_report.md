@@ -246,3 +246,37 @@ universo pequeno, altamente correlacionado e extremamente volátil como
 cripto. Isso não invalida o achado das ações — mostra que o mecanismo
 tem condição de funcionamento, não é uma máquina de vencer qualquer
 mercado.
+
+## Teste de universo amplo (22 ações, 2 por setor, `TOP_K=7`) — hipótese de escala NÃO confirmada
+
+Hipótese: se correlação mais baixa ajuda (achado do universo
+diversificado de 5 ações), um universo bem maior e ainda mais
+diversificado (28 ativos) deveria ajudar igual ou mais.
+
+| Período | Sharpe C1 | Sharpe B&H | (referência: universo de 5 ações) |
+|---|---|---|---|
+| IS 2021-2023 | **-0.28** | 0.80 | C1 0.94 / B&H 0.87 (C1 vencia) |
+| OOS 2018-2020 | 1.27 | 1.31 | C1 1.42 / B&H 1.02 (C1 vencia) |
+| Completo 2012-2024 | 0.63 | 0.43 | C1 0.73 / B&H 0.71 (C1 vencia) |
+
+**Resultado: a hipótese não se confirmou — o universo maior piorou a
+consistência em vez de melhorar.** No IS (2021-2023), a C1 no universo
+amplo vai mal de forma severa (Sharpe -0.28, profit factor de 0.04 —
+quase todas as operações perdedoras), justamente o período em que o
+universo de 5 ações tinha a vitória mais clara (Sharpe 0.94). No OOS
+fica só perto de empatar (perdia por pouco). Só no período completo de
+12 anos a C1 ainda vence — mas com uma margem menor que no universo de
+5 ações.
+
+Hipótese não confirmada pra explicar a piora: o universo amplo inclui
+setores sensíveis a juros (Utilidades — NEE, DUK; Imobiliário — PLD,
+AMT) que sofreram bastante com o aperto monetário de 2022 — se o
+momentum entrou nesses papéis nesse período específico, isso poderia
+explicar o resultado ruim, mas isso não foi testado isoladamente e
+fica só como hipótese, não conclusão.
+
+**Decisão: a configuração de referência da C1 continua sendo o
+universo diversificado de 5 ações (`US_DIVERSIFIED_WATCHLIST`,
+`TOP_K=3`), não o universo amplo.** Escalar o universo não é, por si
+só, uma alavanca de melhora — reforça a disciplina de não assumir que
+"mais dado/mais diversificação" ajuda sem testar.
