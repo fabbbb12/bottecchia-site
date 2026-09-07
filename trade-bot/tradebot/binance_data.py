@@ -202,6 +202,11 @@ def fetch_binance_funding_rates(
     df = pd.DataFrame(rows)
     df["timestamp"] = pd.to_datetime(df["fundingTime"], unit="ms", utc=True)
     df = df.set_index("timestamp")
-    df["funding_rate"] = df["fundingRate"].astype(float)
-    df["mark_price"] = df["markPrice"].astype(float)
+    df["funding_rate"] = pd.to_numeric(df["fundingRate"], errors="coerce")
+    # markPrice às vezes vem vazio em registros históricos da Binance;
+    # não é usado pela estratégia (só funding_rate importa), então
+    # converte de forma tolerante (NaN em vez de estourar) em vez de
+    # falhar o backtest inteiro por causa de um campo que não usamos.
+    df["mark_price"] = pd.to_numeric(df.get("markPrice"), errors="coerce")
+    df = df.dropna(subset=["funding_rate"])
     return df[["funding_rate", "mark_price"]]
