@@ -36,6 +36,7 @@ PAGINATION_SLEEP_SECONDS = 0.2  # educado com o rate limit em buscas longas
 # autenticação, só pra taxa de financiamento histórica.
 FUTURES_BASE_URL = "https://fapi.binance.com"
 FUNDING_RATE_ENDPOINT = "/fapi/v1/fundingRate"
+FUTURES_KLINES_ENDPOINT = "/fapi/v1/klines"
 MAX_FUNDING_RECORDS_PER_REQUEST = 1000
 
 
@@ -70,23 +71,19 @@ def is_binance_symbol(symbol: str) -> bool:
     return symbol.upper().endswith("USDT")
 
 
-def fetch_binance_klines(
+def _fetch_klines(
+    base_url: str,
+    endpoint: str,
     symbol: str,
-    interval: str = "1d",
-    period: str = "1y",
-    start: str | None = None,
-    end: str | None = None,
+    interval: str,
+    period: str,
+    start: str | None,
+    end: str | None,
 ) -> pd.DataFrame:
-    """Baixa candles históricos da Binance e devolve um DataFrame no mesmo
-    formato usado no resto do projeto (colunas open/high/low/close/volume,
-    índice de datas) — compatível com `tradebot.data.fetch_ohlcv`.
-
-    `interval` usa a mesma convenção da Binance (1m, 5m, 15m, 30m, 1h, 4h,
-    1d, 1w, 1M — os mesmos códigos já usados em `--interval` no resto do
-    projeto). Pagina automaticamente em blocos de 1000 candles (limite da
-    API por chamada) até cobrir o intervalo pedido. Sem `start`, usa
-    `period` (mesmo formato do yfinance: "6mo", "1y", "5d") convertido pra
-    uma data fixa, já que a API da Binance só trabalha com datas."""
+    """Motor comum de paginação de klines, usado tanto pro spot
+    (`fetch_binance_klines`) quanto pro perpétuo de futuros
+    (`fetch_binance_futures_klines`) — o formato de resposta é idêntico
+    nos dois endpoints, só a base URL muda."""
     if not start:
         start = _period_to_start_date(period)
 
@@ -105,7 +102,7 @@ def fetch_binance_klines(
             "endTime": end_ms,
             "limit": MAX_KLINES_PER_REQUEST,
         }
-        response = requests.get(BASE_URL + KLINES_ENDPOINT, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
+        response = requests.get(base_url + endpoint, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
         batch = response.json()
         if not batch:
@@ -144,6 +141,44 @@ def fetch_binance_klines(
     for col in ["open", "high", "low", "close", "volume"]:
         df[col] = df[col].astype(float)
     return df[["open", "high", "low", "close", "volume"]]
+
+
+def fetch_binance_klines(
+    symbol: str,
+    interval: str = "1d",
+    period: str = "1y",
+    start: str | None = None,
+    end: str | None = None,
+) -> pd.DataFrame:
+    """Baixa candles históricos do mercado à vista (spot) da Binance e
+    devolve um DataFrame no mesmo formato usado no resto do projeto
+    (colunas open/high/low/close/volume, índice de datas) — compatível
+    com `tradebot.data.fetch_ohlcv`.
+
+    `interval` usa a mesma convenção da Binance (1m, 5m, 15m, 30m, 1h, 4h,
+    1d, 1w, 1M — os mesmos códigos já usados em `--interval` no resto do
+    projeto). Pagina automaticamente em blocos de 1000 candles (limite da
+    API por chamada) até cobrir o intervalo pedido. Sem `start`, usa
+    `period` (mesmo formato do yfinance: "6mo", "1y", "5d") convertido pra
+    uma data fixa, já que a API da Binance só trabalha com datas."""
+    return _fetch_klines(BASE_URL, KLINES_ENDPOINT, symbol, interval, period, start, end)
+
+
+def fetch_binance_futures_klines(
+    symbol: str,
+    interval: str = "1d",
+    period: str = "1y",
+    start: str | None = None,
+    end: str | None = None,
+) -> pd.DataFrame:
+    """Baixa candles do próprio contrato perpétuo (Binance Futures), pelo
+    endpoint de klines de futuros (`/fapi/v1/klines`) — diferente do
+    `mark_price` devolvido por `fetch_binance_funding_rates`, que vem
+    vazio em boa parte do histórico mais antigo. Este endpoint tem
+    cobertura histórica completa desde o lançamento do contrato, então é
+    a fonte confiável pra medir risco de base (perpétuo vs. à vista) em
+    qualquer período, não só nos mais recentes."""
+    return _fetch_klines(FUTURES_BASE_URL, FUTURES_KLINES_ENDPOINT, symbol, interval, period, start, end)
 
 
 def fetch_binance_funding_rates(

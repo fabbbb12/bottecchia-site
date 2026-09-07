@@ -4,6 +4,9 @@ fluxo de funding isoladamente. `backtest_f1.py` documenta desde o início
 que ignora risco de base (descolamento entre o preço à vista e o do
 perpétuo) — este módulo fecha essa lacuna, usando dado medido de verdade
 (ver `scripts/measure_basis_risk.py`) em vez de deixar como suposição.
+Usa o preço do próprio contrato perpétuo (`/fapi/v1/klines`), não o
+`mark_price` de `fetch_binance_funding_rates` -- esse campo vem vazio
+(NaN) em boa parte do histórico mais antigo da Binance.
 
 Modelo: entrada única (comprar à vista + vender o mesmo nocional no
 perpétuo), sem giro depois — igual ao F1 original. A cada evento de
@@ -25,7 +28,7 @@ neutra o tempo todo.
 import pandas as pd
 
 from tradebot.backtest import _max_drawdown_pct, _return_metrics
-from tradebot.binance_data import fetch_binance_funding_rates
+from tradebot.binance_data import fetch_binance_futures_klines, fetch_binance_funding_rates
 from tradebot.data import fetch_ohlcv
 
 ENTRY_FEE_RATE = 0.001
@@ -34,14 +37,19 @@ ENTRY_FEE_RATE = 0.001
 def run_backtest_f1_realistic(
     funding: pd.DataFrame,
     spot: pd.DataFrame,
+    perp: pd.DataFrame,
     starting_cash: float = 10_000.0,
     entry_fee_rate: float = ENTRY_FEE_RATE,
 ) -> dict:
+    """`perp` é o preço do próprio contrato perpétuo (`fetch_binance_futures_klines`)
+    -- usado em vez do `mark_price` de `fetch_binance_funding_rates`, que
+    vem vazio (NaN) em boa parte do histórico mais antigo."""
     if funding.empty:
         raise ValueError("Histórico de funding rate vazio — não dá pra rodar F1-realista.")
 
     spot_aligned = spot["close"].reindex(funding.index, method="ffill")
-    basis_pct = (funding["mark_price"] - spot_aligned) / spot_aligned  # fração, não %
+    perp_aligned = perp["close"].reindex(funding.index, method="ffill")
+    basis_pct = (perp_aligned - spot_aligned) / spot_aligned  # fração, não %
     basis_pct = basis_pct.dropna()
     funding = funding.loc[basis_pct.index]
 
@@ -83,7 +91,8 @@ def run_backtest_f1_realistic_symbol(
 ) -> dict:
     funding = fetch_binance_funding_rates(symbol, start=start, end=end)
     spot = fetch_ohlcv(symbol, interval="1h", start=start, end=end)
-    return run_backtest_f1_realistic(funding, spot, starting_cash=starting_cash, entry_fee_rate=entry_fee_rate)
+    perp = fetch_binance_futures_klines(symbol, interval="1h", start=start, end=end)
+    return run_backtest_f1_realistic(funding, spot, perp, starting_cash=starting_cash, entry_fee_rate=entry_fee_rate)
 
 
 def print_f1_realistic_report(symbol: str, result: dict) -> None:
