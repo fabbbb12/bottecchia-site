@@ -25,6 +25,7 @@ from tradebot.backtest_d1 import BB_PERIOD, BB_STD, STOP_LOSS_PCT, run_multi_bac
 from tradebot.backtest_e1 import LOOKBACK_DAYS as E1_LOOKBACK_DAYS
 from tradebot.backtest_e1 import PAIRS, print_multi_e1_report, run_multi_backtest_e1
 from tradebot.backtest_f1 import print_f1_report, run_backtest_f1_symbol
+from tradebot.backtest_g1 import print_g1_report, run_backtest_g1
 from tradebot.backtest_v2 import run_multi_backtest_v2
 from tradebot.backtest_v3 import run_multi_backtest_v3
 from tradebot.backtest_v4 import run_multi_backtest_v4
@@ -184,6 +185,14 @@ def build_parser() -> argparse.ArgumentParser:
     f1_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
     f1_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD)")
     f1_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
+
+    g1_p = sub.add_parser(
+        "g1", parents=[common], help="Família G: G1, swing trade via IBS + filtro de tendência (ETFs líquidos)"
+    )
+    g1_p.add_argument("--symbol", default="SPY", help="ETF líquido (padrão SPY)")
+    g1_p.add_argument("--period", default="10y", help="Ex: 5y, 10y (ignorado se --start for informado)")
+    g1_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD)")
+    g1_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
 
     live_p = sub.add_parser("live", parents=[common], help="Loop de paper trading em quase-tempo-real")
     live_p.add_argument("--symbol", required=True, help="Um único símbolo, ex: AAPL, PETR4.SA")
@@ -407,6 +416,16 @@ def main(argv: list[str] | None = None) -> None:
             starting_cash=args.cash,
         )
         print_f1_report(args.symbol, result)
+
+    elif args.command == "g1":
+        result = run_backtest_g1(
+            args.symbol,
+            period=args.period,
+            start=args.start,
+            end=args.end,
+            starting_cash=args.cash,
+        )
+        print_g1_report(args.symbol, result)
 
     elif args.command == "live":
         print("AVISO: modo 'live' continua sendo simulado (paper trading). Nenhuma ordem real é enviada.")

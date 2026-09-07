@@ -40,6 +40,14 @@ def macd(
     )
 
 
+def ibs(high: pd.Series, low: pd.Series, close: pd.Series) -> pd.Series:
+    """Internal Bar Strength: posição do fechamento dentro do candle do
+    dia (0 = fechou na mínima, 1 = fechou na máxima). Base de estratégias
+    de reversão de curto prazo (Connors/Alvarez)."""
+    rng = (high - low).replace(0, float("nan"))
+    return ((close - low) / rng).clip(0, 1)
+
+
 def bollinger_bands(
     close: pd.Series, period: int = 20, num_std: float = 2.0
 ) -> pd.DataFrame:
