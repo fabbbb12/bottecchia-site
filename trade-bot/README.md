@@ -710,6 +710,15 @@ do BTC, não é sorte de um ativo só. **F2, não F1 puro, é a estratégia
 final recomendada da família F.** Detalhes completos em
 `reports/F2_report.md`.
 
+**F2 vs. buy-and-hold, nas mesmas 4 janelas:** F2 vence em 3 de 4, e por
+muito (BTC 2021-2023: buy-hold -43.35% vs F2 +25.61%; BTC 2025-2026:
+-27.46% vs 0.00%; ETH 2025-2026: -42.21% vs 0.00%) — mas perde na
+janela em que o ativo subjacente subiu forte (ETH 2021-2023: buy-hold
++64.68% vs F2 +30.50%, porque F2 é neutro em direção por desenho e não
+captura alta de preço). Não é "F2 é melhor" incondicional — é proteção
+de capital em baixa/lateralização, ao custo de abrir mão de upside em
+bull market forte.
+
 ```bash
 python -m tradebot f1 --symbol BTCUSDT --start 2021-01-01 --end 2023-01-01
 PYTHONPATH=. python scripts/run_f1_realistic.py BTCUSDT 2021-01-01 2023-01-01

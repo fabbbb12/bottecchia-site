@@ -16,7 +16,28 @@ contrapartida honesta (deixa dinheiro na mesa em parte da janela boa).
 | ETHUSDT 2021-2023 (funding forte) | — (não testado) | Sharpe 3.77, PnL +30.50%, DD -0.68%, 34.6% do tempo posicionado |
 | ETHUSDT 2025-2026 (funding fraco) | — (não testado) | Sharpe 0.00, PnL 0.00%, DD **0.00%**, 0% do tempo posicionado |
 
-**Confirmação cross-asset:** ETHUSDT reproduz o mesmo padrão do BTCUSDT
+## F2 vs. buy-and-hold (a pergunta que realmente importa)
+
+| Janela | Buy-and-hold | F2 | Vencedor |
+|---|---|---|---|
+| BTCUSDT 2021-2023 | -43.35% | +25.61% | **F2, por 69 pontos** |
+| BTCUSDT 2025-2026 | -27.46% | 0.00% | **F2, por 27 pontos** |
+| ETHUSDT 2021-2023 | +64.68% | +30.50% | **Buy-and-hold, por 34 pontos** |
+| ETHUSDT 2025-2026 | -42.21% | 0.00% | **F2, por 42 pontos** |
+
+F2 vence em 3 das 4 janelas, e vence por muito nas 3 — nunca é vitória
+marginal. Mas o padrão por trás não é "F2 é melhor", é um **perfil de
+risco diferente**: F2 é neutro em direção (a perna vendida no perpétuo
+cancela de propósito o movimento de preço), então ganha disparado
+quando o mercado cai ou fica de lado (buy-and-hold quebra a cara, F2
+fica perto de zero ou positivo) e perde quando o mercado sobe forte
+(ETH quase dobrou em 2021-2023 — um comprado puro captura isso, F2
+não, por desenho). Não é incondicional: é proteção de capital em
+baixa/lateralização, ao custo de abrir mão de upside em alta forte.
+
+## Confirmação cross-asset
+
+ETHUSDT reproduz o mesmo padrão do BTCUSDT
 em ambas as janelas, com números muito próximos (34.6% vs 33.9% do
 tempo posicionado na janela forte; zero entradas nos dois na janela
 fraca). Não é coincidência de um ativo só — é o comportamento do
