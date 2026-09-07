@@ -49,6 +49,19 @@ faz sentido compará-la a comprar-e-segurar os dois ativos (isso mediria
 exposição direcional, não a qualidade da convergência) — o benchmark
 aqui é uma referência de caixa parado (0%), deixado explícito no
 relatório em vez de fingir uma comparação que não é justa.
+
+RESULTADO: EXPERIMENTO REJEITADO (completo 2018-2024, IS 2021-2023, OOS
+2018-2020). ITUB4/BBDC4 perde dinheiro nos 3 recortes, sem exceção
+(Sharpe -0.14/-0.26/-0.35) — rejeição limpa, sem reversão de regime.
+XOM/CVX é inconsistente: positivo nas duas janelas de 2 anos testadas
+(Sharpe 0.53 e 0.21) mas negativo no período completo de 6 anos (Sharpe
+-0.05) — magnitude pequena nos dois sentidos, compatível com ruído em
+torno de zero, não com sinal real. Giro alto (turnover 5.8x-27.5x) e
+custo relevante ($58-275 em taxas por teste) frente aos resultados de
+poucos %. Ver reports/E1_report.md para a análise completa — inclui
+por que o desenho "de livro-texto" (hedge ratio fixo, pares por lógica
+de setor sem cointegração testada) pode não ser sofisticado o
+suficiente, sem implementar isso sem confirmação nova.
 """
 
 import logging

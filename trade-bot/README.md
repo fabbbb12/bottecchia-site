@@ -550,7 +550,7 @@ venda a descoberto é tratado como caixa disponível pra uso, o que é
 mais otimista que uma conta margem real. `compute_round_trip_pnls()`
 já trata os dois lados (comprado e vendido) simetricamente.
 
-## Família E — Pairs Trading / Mercado Neutro (E1, em teste)
+## Família E — Pairs Trading / Mercado Neutro (E1, rejeitada)
 
 Primeira estratégia do projeto que não depende do mercado subir pra dar
 lucro: em vez de apostar na direção de um ativo, aposta na
@@ -584,7 +584,23 @@ Regras:
 python -m tradebot e1 --start 2018-01-01 --end 2024-01-01
 ```
 
-Resultado: em aberto — ainda não foi rodado contra dados reais.
+**Resultado: EXPERIMENTO REJEITADO** (completo 2018-2024, IS 2021-2023,
+OOS 2018-2020):
+
+| Par | Completo | IS | OOS |
+|---|---|---|---|
+| ITUB4/BBDC4 — Sharpe | **-0.14** | **-0.26** | **-0.35** |
+| XOM/CVX — Sharpe | -0.05 | 0.53 | 0.21 |
+
+ITUB4/BBDC4 perde dinheiro nos 3 recortes, sem exceção — rejeição
+limpa. XOM/CVX é inconsistente (positivo nas duas janelas de 2 anos,
+negativo no período completo), com magnitude pequena nos dois
+sentidos — leitura mais honesta é ruído em torno de zero, não sinal
+real. Giro alto (7x-27x) consome qualquer edge pequeno que exista. O
+desenho é o mais simples possível de pairs trading (hedge ratio fixo
+1:1, par por lógica de setor sem cointegração testada) — uma versão
+mais sofisticada poderia ter resultado diferente, mas isso é trabalho
+futuro. Análise completa em `reports/E1_report.md`.
 
 ## Rodando os testes
 
