@@ -95,22 +95,46 @@ volatilidade extra entraria na série de retornos e reduziria o Sharpe
 mostrado, que hoje é artificialmente suave (drawdown de -0.09% a
 -1.78%) por só contar o funding, ignorando essa marcação.
 
-**Estimativa honesta:** juntando as duas fontes de risco à série de
-retornos, um Sharpe realista fica na faixa de **2 a 4** — bem abaixo
-dos 7-13 do backtest puro, mas ainda seria, se confirmado num modelo
-mais completo, um resultado melhor que buy-and-hold com uma fração do
-drawdown. Não é o número final (exigiria simular a marcação diária
-completa, fora do escopo deste teste), mas é a correção de ordem de
-grandeza mais honesta que dá pra fazer com o dado que já temos.
+## F1-realista: marcação a mercado do risco de base (dado real, não estimativa)
+
+`tradebot/backtest_f1_realistic.py` fecha a lacuna de verdade: em vez de
+só contar o funding, marca a posição a mercado a cada evento de 8h
+usando o preço do próprio contrato perpétuo (via `/fapi/v1/klines`),
+somando o retorno do funding com a variação do descolamento
+perpétuo-vs-à-vista desde o evento anterior. Testado nas duas pontas do
+espectro de intensidade de funding já vistas:
+
+| Janela | Sharpe funding puro | Sharpe realista (c/ basis) | PnL realista | Máx. DD realista |
+|---|---|---|---|---|
+| 2021-01 a 2023-01 (funding forte) | 8.51 | **5.37** | +41.40% | -0.53% |
+| 2025-09 a 2026-09 (funding fraco) | 10.62 | **0.07** | +0.70% | -6.18% |
+
+**O padrão real: o edge sobrevive quando o funding é forte o bastante
+pra dominar o ruído do basis, e desaparece quando o funding comprime.**
+Na janela mais forte, o Sharpe cai de 8.51 pra 5.37 — ainda excelente,
+o ruído do basis é um desconto, não um veneno. Na janela mais fraca
+(a mais recente, onde já tínhamos visto a taxa média de funding cair
+~10x), o mesmo ruído de basis (que não muda de magnitude com o tempo)
+passa a dominar o retorno, e o Sharpe desaba pra perto de zero — o
+edge não desaparece por acaso, ele é consumido pelo próprio risco que
+o backtest original escondia.
+
+**Implicação prática, não hipotética:** uma implementação real de F1
+não deveria entrar de forma incondicional — deveria ter um filtro de
+taxa de funding mínima (só monta a posição quando a taxa média recente
+estiver acima de um piso que compense o ruído de basis, ex: acima da
+faixa observada na janela fraca). Isso é trabalho futuro em aberto, não
+algo a implementar sem testar isoladamente, seguindo a mesma disciplina
+do resto do projeto.
 
 ## Classificação: ACEITA COM RESSALVA
 
 Diferente de V1-E1 (todos rejeitados ou triviais), F1 é o primeiro
 experimento do projeto com evidência forte e consistente de edge real —
-mas o edge é de um tipo diferente (carry estrutural do mercado de
-derivativos, não previsão de preço) e o resultado numérico mostrado
-superestima o que seria alcançável numa implementação real, por ignorar
-risco de base e de liquidação. Fica registrado como aceito pro mecanismo
-em si (a taxa de financiamento histórica é, de fato, positiva o
-suficiente e consistente o suficiente pra compensar custos de entrada),
-não pro número de Sharpe específico mostrado aqui.
+mas é um edge **condicional**, não incondicional: sobrevive de forma
+robusta (Sharpe 5+) quando o funding está na faixa historicamente
+normal, e desaparece (Sharpe perto de zero) quando comprime pra níveis
+baixos, como visto na janela mais recente. Fica registrado como aceito
+pro mecanismo em si — com a ressalva de que uma implementação real
+precisaria de um filtro de intensidade mínima de funding pra evitar
+operar justamente nas janelas onde o risco de base consome o retorno.

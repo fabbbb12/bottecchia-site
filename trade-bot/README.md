@@ -665,19 +665,25 @@ O perpétuo BTCUSDT da Binance Futures só existe desde set/2019 — não dá
 pra testar períodos anteriores a isso (por isso o OOS aqui é 2020-2022,
 não 2018-2020 como no resto do projeto).
 
-**Resultado: ACEITA COM RESSALVA.** Validado em 6 janelas não
-sobrepostas cobrindo todo o histórico do perpétuo desde o lançamento
-(set/2019 a hoje) em 2 ativos (BTCUSDT e ETHUSDT) — funding positivo em
-76.5%-96.6% dos eventos em TODAS as 6 janelas, sem exceção, Sharpe
-sempre entre 7 e 13, drawdown sempre abaixo de 2%. É o único
-experimento do projeto com edge consistente nesse grau. Mas a
-intensidade do funding está caindo com o tempo (~10x menor na janela
-mais recente, 2025-2026, vs as mais antigas — sinal de mercado mais
-arbitrado/maduro), e o Sharpe mostrado **não é o Sharpe real**: o
-modelo ignora risco de base e risco de liquidação da perna vendida no
-perpétuo — os dois motivos clássicos pelos quais cash-and-carry real
-quebra apesar de "neutro em direção" na teoria. Detalhes completos em
-`reports/F1_report.md`.
+**Resultado: ACEITA COM RESSALVA — edge condicional, não incondicional.**
+Validado em 6 janelas não sobrepostas cobrindo todo o histórico do
+perpétuo desde o lançamento (set/2019 a hoje) em 2 ativos (BTCUSDT e
+ETHUSDT) — funding positivo em 76.5%-96.6% dos eventos em TODAS as 6
+janelas, sem exceção. Mas o Sharpe de 7-13 do backtest puro ignora
+risco de base (descolamento perpétuo vs. à vista) e risco de
+liquidação da perna vendida — os dois motivos clássicos pelos quais
+cash-and-carry real quebra apesar de "neutro em direção" na teoria.
+
+Marcando o risco de base a mercado de verdade (`backtest_f1_realistic.py`,
+usa o preço do próprio perpétuo via `/fapi/v1/klines`, não o `mark_price`
+do funding, que vem vazio em boa parte do histórico): Sharpe cai pra
+**5.37** na janela de funding forte (2021-2023) — ainda ótimo — mas pra
+**0.07** (quase zero) na janela de funding fraco (2025-2026, a mais
+recente). O edge é real, mas só sobrevive quando a taxa de funding está
+forte o bastante pra dominar o ruído do basis; comprimido, o ruído
+consome o retorno. Implicação prática: uma implementação real
+precisaria de um filtro de intensidade mínima de funding, não entrada
+incondicional. Detalhes completos em `reports/F1_report.md`.
 
 ## Rodando os testes
 
