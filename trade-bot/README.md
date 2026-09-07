@@ -524,9 +524,13 @@ limite de taxa mais alto, seria só a chave pública como header, lida de
 variável de ambiente — **nunca cole chave nem secret no código ou no
 histórico do repositório.**
 
-Isso abre a porta pra testar estratégias de giro mais rápido (a família
-D — reversão à média por faixa — nunca foi testada em candle de 1h/4h,
-só diário) com histórico de verdade, não só os últimos dias.
+**Resultado do teste (D1 em BTCUSDT, candle de 1h, 6 meses):** piora,
+não melhora — a D1 fica no **prejuízo absoluto** (-10.98%), atrás de V1
+(+1.58%) e do buy-and-hold (+15.72%), com Sharpe/Sortino/Calmar todos
+negativos. Reversão à média continua sem funcionar, agora confirmado
+também em cripto intraday — a quinta confirmação independente do mesmo
+padrão (V3, V5, V6, D1 diário, D1 intraday). Análise completa em
+`reports/D1_report.md`.
 
 ## Venda a descoberto (short) — infraestrutura nova
 

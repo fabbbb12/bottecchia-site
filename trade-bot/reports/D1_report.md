@@ -72,3 +72,42 @@ achado (redução de drawdown sem edge de retorno) que já caracteriza
 V1/B1, não uma descoberta que justifique validar a estratégia.
 
 ## Classificação: REJEITADA
+
+## Teste adicional: candle de 1h em cripto (BTCUSDT, via Binance)
+
+Depois de ganhar acesso a dado intraday real (API pública da Binance),
+testei se a D1 se sai melhor num timeframe mais rápido — hipótese: um
+sistema de reversão à média pode fazer mais sentido operando rápido
+(candle de hora) do que em candle diário, onde foi rejeitada.
+
+`python -m tradebot compare --symbol BTCUSDT --interval 1h --period 6mo --challenger d1`
+
+| Métrica | D1 | V1 | Buy&Hold |
+|---|---|---|---|
+| Retorno | **-10.98%** | 1.58% | 15.72% |
+| CAGR | -20.62% | 3.17% | 33.61% |
+| Máx. drawdown | -14.83% | -17.73% | -29.36% |
+| Sharpe | -0.28 | 0.04 | 0.16 |
+| Sortino | -0.24 | 0.05 | 0.22 |
+| Calmar | -1.39 | 0.18 | 1.14 |
+
+**Piora, não melhora.** A D1 não só perde de V1 e do buy-and-hold como
+fica no **prejuízo absoluto** — algo que nunca tinha acontecido nem no
+pior teste em candle diário. Isso é coerente com o padrão do projeto
+inteiro: BTCUSDT subiu 15.72% nesses 6 meses (tendência), e reversão à
+média historicamente vai mal em tendência sustentada, agora confirmado
+também em cripto intraday.
+
+Ressalva metodológica: os parâmetros da D1 (banda de 20 períodos) foram
+congelados pensando em candle diário — em candle de hora, "20 períodos"
+vira menos de um dia, o que muda o que a banda realmente mede. Mesmo
+com essa ressalva, o resultado é consistente com a rejeição original:
+não há indício de que ajustar a janela salvaria a estratégia, já que o
+problema de fundo (reversão à média não funciona em tendência) se repete
+independente do timeframe.
+
+**Conclusão final da D1, agora com 5 confirmações independentes (V3,
+V5, V6, D1 diário, D1 intraday): reversão à média como categoria de
+estratégia não tem edge nesse tipo de mercado, em nenhum timeframe
+testado até agora.** Não vale a pena testar mais variantes de reversão
+à média sem uma razão nova e específica.
