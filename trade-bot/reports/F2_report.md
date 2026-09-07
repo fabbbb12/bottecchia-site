@@ -1,0 +1,55 @@
+# F2 — Cash-and-Carry com Filtro de Intensidade Mínima de Funding
+
+**Status: ACEITA.** Nasceu direto da conclusão de F1-realista (o edge do
+cash-and-carry só sobrevive ao risco de base quando o funding está forte
+o bastante). F2 testa se um filtro simples — só entrar quando a taxa de
+funding recente está acima de um piso — resolve isso. Resultado: **sim,
+resolve exatamente o problema que deveria resolver**, com uma
+contrapartida honesta (deixa dinheiro na mesa em parte da janela boa).
+
+## Resultados
+
+| Janela | F1-realista (sem filtro) | F2 (com filtro) |
+|---|---|---|
+| 2021-2023 (funding forte) | Sharpe 5.37, PnL +41.40%, DD -0.53% | Sharpe 4.48, PnL +25.61%, DD -0.50%, 33.9% do tempo posicionado |
+| 2025-2026 (funding fraco) | Sharpe 0.07, PnL +0.70%, DD **-6.18%** | Sharpe 0.00, PnL 0.00%, DD **0.00%**, 0% do tempo posicionado |
+
+## Leitura
+
+**Na janela fraca, o filtro fez exatamente o que deveria: nunca entrou.**
+A média móvel de 90 eventos nunca ficou acima do limiar de 0.01%/evento
+no período inteiro — F2 ficou 100% em caixa, trocando um resultado quase
+neutro mas arriscado (+0.70% com -6.18% de drawdown) por zero risco e
+zero retorno. Pra quem está avaliando se vale a pena operar essa
+estratégia numa janela específica, isso é a resposta certa: não é "ganhar
+pouco arriscando muito", é "não jogar quando o jogo não compensa".
+
+**Na janela forte, o filtro é conservador demais e deixa dinheiro na
+mesa.** Só ficou posicionado 33.9% do tempo mesmo na janela "boa" —
+o limiar de 0.01%/evento corta fora períodos que ainda eram
+funding-positivos, só que abaixo do piso escolhido. O Sharpe caiu pouco
+(5.37 → 4.48), mas o PnL caiu bastante (41.40% → 25.61%), porque parte
+do tempo fora da posição era, na verdade, tempo que valia a pena estar
+dentro.
+
+## Trade-off, não veredito único
+
+F2 não é estritamente "melhor" que F1-realista em todos os eixos — é
+melhor no eixo que importava resolver (evitar o pior caso da janela
+fraca) e pior no eixo de deixar retorno na mesa da janela forte. O
+limiar de 0.01%/evento foi escolhido antes de rodar qualquer teste
+(pré-registrado), então esse resultado não foi ajustado a dedo — mas um
+limiar mais baixo provavelmente capturaria mais da janela forte sem
+reabrir a porta pra janela fraca (ambas têm médias de funding
+suficientemente distantes: ~0.02-0.03%/evento vs ~0.003%/evento) — isso
+é uma otimização de parâmetro legítima pra próxima rodada, não algo pra
+fazer agora só olhando pra esse resultado.
+
+## Classificação: ACEITA
+
+F2 resolve o problema real identificado em F1-realista: evita operar
+justamente na janela onde o risco de base consumiria o retorno. A
+estratégia final recomendada da família F é F2, não F1 puro — com a
+ressalva de que o limiar específico (0.01%/evento, lookback de 90
+eventos) foi uma escolha razoável de primeira tentativa, não
+necessariamente ótima.

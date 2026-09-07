@@ -636,7 +636,7 @@ universo diversificado de 5 ações, não o amplo** — escalar não é, por
 si só, uma alavanca de melhora. Análise completa em
 `reports/C1_report.md`.
 
-## Família F — Cash-and-Carry / Arbitragem de Funding Rate (F1, aceita com ressalva)
+## Família F — Cash-and-Carry / Arbitragem de Funding Rate (F1 aceita com ressalva, F2 aceita)
 
 Estruturalmente diferente de tudo testado até aqui (V-E): não aposta em
 direção de preço nem em convergência entre dois ativos — explora um
@@ -685,6 +685,33 @@ consome o retorno. Implicação prática: uma implementação real
 precisaria de um filtro de intensidade mínima de funding, não entrada
 incondicional. Detalhes completos em `reports/F1_report.md`.
 
+### F2 — o filtro que resolve a ressalva de F1 (ACEITA, estratégia final da família)
+
+Hipótese pré-registrada direto da conclusão acima: só monta a posição
+quando a média móvel de 90 eventos (~30 dias) da taxa de funding
+estiver `>= 0.01%/evento`; fora disso fica 100% em caixa
+(`tradebot/backtest_f2.py`). Confirmado nas duas janelas já testadas:
+
+- **Janela forte (2021-2023)**: Sharpe 4.48, PnL +25.61%, 33.9% do
+  tempo posicionado — um pouco mais conservador que o F1-realista sem
+  filtro (Sharpe 5.37, PnL +41.40%), deixa parte do retorno na mesa.
+- **Janela fraca (2025-2026)**: F2 **nunca entrou** — 0 transações, 0%
+  de drawdown, 0% de retorno, em vez do +0.70% com -6.18% de drawdown
+  do F1-realista sem filtro.
+
+O filtro faz exatamente o que devia: evita por completo a janela onde o
+risco de base consumiria o retorno, ao custo de deixar dinheiro na mesa
+em parte da janela boa (limiar pode estar conservador demais — ajuste
+fino é trabalho futuro, não feito agora pra não p-hackear em cima do
+resultado). **F2, não F1 puro, é a estratégia final recomendada da
+família F.** Detalhes completos em `reports/F2_report.md`.
+
+```bash
+python -m tradebot f1 --symbol BTCUSDT --start 2021-01-01 --end 2023-01-01
+PYTHONPATH=. python scripts/run_f1_realistic.py BTCUSDT 2021-01-01 2023-01-01
+PYTHONPATH=. python scripts/run_f2.py BTCUSDT 2021-01-01 2023-01-01
+```
+
 ## Rodando os testes
 
 ```bash
@@ -710,6 +737,8 @@ trade-bot/
     backtest_d1.py  Família D: D1, reversão à média pura por banda de Bollinger (zigue-zague)
     backtest_e1.py  Família E: E1, pairs trading / mercado neutro (usa short)
     backtest_f1.py  Família F: F1, cash-and-carry / funding rate (Binance Futures)
+    backtest_f1_realistic.py  F1 marcando risco de base a mercado (preço real do perpétuo)
+    backtest_f2.py  F2, F1 com filtro de intensidade mínima de funding (estratégia final da família F)
     walkforward.py  Roda a estratégia congelada em janelas sequenciais (V1 ou outra, via backtest_fn)
     live.py         Loop de paper trading com persistência de estado
     charts.py       Gráficos PNG (preço, indicadores, sinais de compra/venda)
