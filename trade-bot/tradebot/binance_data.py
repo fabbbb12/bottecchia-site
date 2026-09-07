@@ -31,6 +31,13 @@ MAX_KLINES_PER_REQUEST = 1000
 REQUEST_TIMEOUT_SECONDS = 30
 PAGINATION_SLEEP_SECONDS = 0.2  # educado com o rate limit em buscas longas
 
+# API de Futuros (contratos perpétuos) é um domínio/base URL diferente da
+# API de Spot usada em fetch_binance_klines — também pública, sem
+# autenticação, só pra taxa de financiamento histórica.
+FUTURES_BASE_URL = "https://fapi.binance.com"
+FUNDING_RATE_ENDPOINT = "/fapi/v1/fundingRate"
+MAX_FUNDING_RECORDS_PER_REQUEST = 1000
+
 
 def _to_millis(date_str: str) -> int:
     dt = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
@@ -137,3 +144,64 @@ def fetch_binance_klines(
     for col in ["open", "high", "low", "close", "volume"]:
         df[col] = df[col].astype(float)
     return df[["open", "high", "low", "close", "volume"]]
+
+
+def fetch_binance_funding_rates(
+    symbol: str,
+    period: str = "1y",
+    start: str | None = None,
+    end: str | None = None,
+) -> pd.DataFrame:
+    """Baixa o histórico de taxa de financiamento (funding rate) do
+    contrato perpétuo da Binance Futures pra `symbol` (ex: "BTCUSDT") —
+    endpoint público (`/fapi/v1/fundingRate`), sem autenticação. A taxa é
+    cobrada/paga a cada 8 horas entre quem está comprado e vendido no
+    perpétuo, pra manter o preço do contrato colado no preço à vista —
+    é o que sustenta a estratégia de "cash-and-carry" (comprado no à
+    vista + vendido no perpétuo, recebendo a taxa quando ela é positiva,
+    sem apostar na direção do preço).
+
+    Devolve um DataFrame com índice de data/hora e colunas `funding_rate`
+    (fração, ex: 0.0001 = 0.01%) e `mark_price`."""
+    if not start:
+        start = _period_to_start_date(period)
+
+    start_ms = _to_millis(start)
+    end_ms = _to_millis(end) if end else int(time.time() * 1000)
+
+    logger.info("Baixando funding rate de %s via Binance Futures (start=%s, end=%s)...", symbol, start, end)
+
+    rows: list[dict] = []
+    cursor = start_ms
+    while cursor < end_ms:
+        params = {
+            "symbol": symbol.upper(),
+            "startTime": cursor,
+            "endTime": end_ms,
+            "limit": MAX_FUNDING_RECORDS_PER_REQUEST,
+        }
+        response = requests.get(
+            FUTURES_BASE_URL + FUNDING_RATE_ENDPOINT, params=params, timeout=REQUEST_TIMEOUT_SECONDS
+        )
+        response.raise_for_status()
+        batch = response.json()
+        if not batch:
+            break
+        rows.extend(batch)
+        last_funding_time = batch[-1]["fundingTime"]
+        if last_funding_time <= cursor:
+            break
+        cursor = last_funding_time + 1
+        if len(batch) < MAX_FUNDING_RECORDS_PER_REQUEST:
+            break
+        time.sleep(PAGINATION_SLEEP_SECONDS)
+
+    if not rows:
+        raise ValueError(f"Nenhum funding rate retornado pela Binance para o símbolo '{symbol}'.")
+
+    df = pd.DataFrame(rows)
+    df["timestamp"] = pd.to_datetime(df["fundingTime"], unit="ms", utc=True)
+    df = df.set_index("timestamp")
+    df["funding_rate"] = df["fundingRate"].astype(float)
+    df["mark_price"] = df["markPrice"].astype(float)
+    return df[["funding_rate", "mark_price"]]

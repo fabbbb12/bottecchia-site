@@ -636,6 +636,37 @@ universo diversificado de 5 ações, não o amplo** — escalar não é, por
 si só, uma alavanca de melhora. Análise completa em
 `reports/C1_report.md`.
 
+## Família F — Cash-and-Carry / Arbitragem de Funding Rate (F1, em teste)
+
+Estruturalmente diferente de tudo testado até aqui (V-E): não aposta em
+direção de preço nem em convergência entre dois ativos — explora um
+mecanismo estrutural do mercado de derivativos cripto. Contratos
+perpétuos pagam uma taxa de financiamento a cada 8h entre quem está
+comprado e vendido, pra manter o preço do contrato colado no preço à
+vista. Comprando o ativo à vista e vendendo o mesmo valor no perpétuo
+(posição neutra em dólar, sem aposta de direção), recebe-se essa taxa
+sempre que ela for positiva — o mecanismo que sustenta boa parte dos
+bots que realmente ganham dinheiro em cripto sem prever preço.
+
+Regras (`tradebot/backtest_f1.py`): entrada única no início do período
+(sem giro depois), nocional recalculado a cada evento como o capital
+atual (composto). **Simplificação documentada**: ignora risco de base
+(perpétuo vs à vista) e risco de liquidação da perna vendida — não é
+"dinheiro sem risco", é o fluxo de funding isolado testado
+primeiro.
+
+```bash
+python -m tradebot f1 --symbol BTCUSDT --start 2021-01-01 --end 2023-01-01
+python -m tradebot f1 --symbol BTCUSDT --start 2020-01-01 --end 2022-01-01
+python -m tradebot f1 --symbol BTCUSDT --period 3y
+```
+
+O perpétuo BTCUSDT da Binance Futures só existe desde set/2019 — não dá
+pra testar períodos anteriores a isso (por isso o OOS aqui é 2020-2022,
+não 2018-2020 como no resto do projeto).
+
+Resultado: em aberto — ainda não foi rodado contra dados reais.
+
 ## Rodando os testes
 
 ```bash
@@ -660,6 +691,7 @@ trade-bot/
     backtest_c3.py  Placebo aleatório da C1 (mesma mecânica, seleção sorteada)
     backtest_d1.py  Família D: D1, reversão à média pura por banda de Bollinger (zigue-zague)
     backtest_e1.py  Família E: E1, pairs trading / mercado neutro (usa short)
+    backtest_f1.py  Família F: F1, cash-and-carry / funding rate (Binance Futures)
     walkforward.py  Roda a estratégia congelada em janelas sequenciais (V1 ou outra, via backtest_fn)
     live.py         Loop de paper trading com persistência de estado
     charts.py       Gráficos PNG (preço, indicadores, sinais de compra/venda)

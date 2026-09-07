@@ -24,6 +24,7 @@ from tradebot.backtest_c3 import SEED, print_c1_c3_comparison, run_backtest_c3
 from tradebot.backtest_d1 import BB_PERIOD, BB_STD, STOP_LOSS_PCT, run_multi_backtest_d1
 from tradebot.backtest_e1 import LOOKBACK_DAYS as E1_LOOKBACK_DAYS
 from tradebot.backtest_e1 import PAIRS, print_multi_e1_report, run_multi_backtest_e1
+from tradebot.backtest_f1 import print_f1_report, run_backtest_f1_symbol
 from tradebot.backtest_v2 import run_multi_backtest_v2
 from tradebot.backtest_v3 import run_multi_backtest_v3
 from tradebot.backtest_v4 import run_multi_backtest_v4
@@ -175,6 +176,14 @@ def build_parser() -> argparse.ArgumentParser:
     e1_p.add_argument(
         "--lookback", type=int, default=E1_LOOKBACK_DAYS, help="Janela do z-score do spread, em pregões (padrão 60)"
     )
+
+    f1_p = sub.add_parser(
+        "f1", parents=[common], help="Família F: F1, cash-and-carry (arbitragem de funding rate, cripto)"
+    )
+    f1_p.add_argument("--symbol", default="BTCUSDT", help="Símbolo do perpétuo na Binance Futures (padrão BTCUSDT)")
+    f1_p.add_argument("--period", default="1y", help="Ex: 1mo, 6mo, 1y, 5y (ignorado se --start for informado)")
+    f1_p.add_argument("--start", help="Data inicial fixa (AAAA-MM-DD)")
+    f1_p.add_argument("--end", help="Data final fixa (AAAA-MM-DD), opcional")
 
     live_p = sub.add_parser("live", parents=[common], help="Loop de paper trading em quase-tempo-real")
     live_p.add_argument("--symbol", required=True, help="Um único símbolo, ex: AAPL, PETR4.SA")
@@ -388,6 +397,16 @@ def main(argv: list[str] | None = None) -> None:
             lookback_days=args.lookback,
         )
         print_multi_e1_report(results)
+
+    elif args.command == "f1":
+        result = run_backtest_f1_symbol(
+            args.symbol,
+            period=args.period,
+            start=args.start,
+            end=args.end,
+            starting_cash=args.cash,
+        )
+        print_f1_report(args.symbol, result)
 
     elif args.command == "live":
         print("AVISO: modo 'live' continua sendo simulado (paper trading). Nenhuma ordem real é enviada.")
