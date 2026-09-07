@@ -159,3 +159,39 @@ rejeitada (mantida no repositório como registro do experimento, igual
 V2/V3/V5/V6), sem criar B2/B3 automaticamente. Se fizer sentido
 continuar a família B, isso merece ser decidido e desenhado como uma
 nova hipótese isolada — não como reação a este resultado.
+
+## Teste adicional: candle de 15min em cripto (BTCUSDT, via Binance)
+
+Pedido do usuário: já que reversão à média falhou em todo timeframe
+testado (diário e 1h, ver `reports/D1_report.md`), testar se rompimento
+(B1) se sai melhor num timeframe bem mais curto, onde talvez a técnica
+se comporte diferente.
+
+`python -m tradebot compare --symbol BTCUSDT --interval 15m --period 3mo --challenger b1`
+
+| Métrica | B1 | V1 | Buy&Hold |
+|---|---|---|---|
+| Retorno | **-23.46%** | -16.55% | 29.62% |
+| CAGR | -65.41% | -51.23% | 180.13% |
+| Máx. drawdown | -24.81% | -25.48% | -13.56% |
+| Sharpe | **-0.68** | -0.21 | 0.24 |
+| Sortino | -0.66 | -0.21 | 0.33 |
+| Calmar | -2.64 | -2.01 | 13.29 |
+
+**Piora ainda mais que em 1h.** B1 fica pior que a própria V1 (que já
+tinha ido mal) e muito atrás do buy-and-hold — 150 trades em 3 meses
+(giro altíssimo). O período testado foi de alta forte e sustentada
+(+29.62% do BTC em 3 meses) — coerente com o padrão de todo o projeto:
+qualquer estratégia que entra e sai do mercado perde pra simplesmente
+segurar quando a alta é contínua, e isso vale tanto pra rompimento
+quanto pra reversão à média, em qualquer timeframe testado até agora
+(diário, 1h, 15min).
+
+**Conclusão prática:** mover uma técnica já testada pra um timeframe
+mais curto, sozinho, não muda o resultado — nem rompimento nem
+reversão à média mostraram edge em nenhuma escala de tempo testada
+neste projeto. Continuar reduzindo o timeframe sem uma técnica
+genuinamente nova (baseada em outro tipo de informação — ex: livro de
+ofertas, taxa de financiamento de futuros, fluxo de ordens — não
+apenas OHLCV de candle) tem baixa probabilidade de mudar essa
+conclusão.
