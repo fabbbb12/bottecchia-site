@@ -70,6 +70,39 @@ backtest. Um Sharpe realista, depois de modelar isso, seria bem mais
 baixo que 7-13 (mas provavelmente ainda positivo, dado o quão consistente
 foi o sinal de funding em si).
 
+## Risco quantificado (dado real, não suposição)
+
+Medido em `scripts/measure_basis_risk.py` sobre BTCUSDT, janela mais
+recente (2025-09 a 2026-09):
+
+**Risco de liquidação.** Pior movimento de `mark_price` em uma única
+janela de 8h: **-6.77% / +6.66%**. Sem alavancagem extra na perna
+vendida (o que o backtest já assume — nocional = capital, 1:1, sem
+tentar ser eficiente em capital), um movimento desse tamanho isolado
+não quebra a posição. O risco real é **cumulativo**: crashes/pumps de
+cripto já emendaram vários candles na mesma direção em sequência (ex:
+o crash de mar/2020 caiu ~50% num único dia). Isso é a diferença entre
+"seguro no backtest" e "seguro na prática" — a conta de margem da
+perna vendida precisa ter colchão suficiente pra um evento de vários
+dias, não só pra um candle de 8h.
+
+**Risco de base.** Descolamento perpétuo vs. à vista: média **-0.04%**
+(perto de zero, como esperado — o próprio funding existe pra puxar o
+perpétuo de volta pro à vista), desvio-padrão **0.47%**, picos de até
+**+3.82% / -3.71%**. É ruído que reverte, não um viés que se acumula
+— mas ao marcar a posição a mercado diariamente (não só na saída), essa
+volatilidade extra entraria na série de retornos e reduziria o Sharpe
+mostrado, que hoje é artificialmente suave (drawdown de -0.09% a
+-1.78%) por só contar o funding, ignorando essa marcação.
+
+**Estimativa honesta:** juntando as duas fontes de risco à série de
+retornos, um Sharpe realista fica na faixa de **2 a 4** — bem abaixo
+dos 7-13 do backtest puro, mas ainda seria, se confirmado num modelo
+mais completo, um resultado melhor que buy-and-hold com uma fração do
+drawdown. Não é o número final (exigiria simular a marcação diária
+completa, fora do escopo deste teste), mas é a correção de ordem de
+grandeza mais honesta que dá pra fazer com o dado que já temos.
+
 ## Classificação: ACEITA COM RESSALVA
 
 Diferente de V1-E1 (todos rejeitados ou triviais), F1 é o primeiro
