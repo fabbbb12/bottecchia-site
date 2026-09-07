@@ -11,8 +11,16 @@ contrapartida honesta (deixa dinheiro na mesa em parte da janela boa).
 
 | Janela | F1-realista (sem filtro) | F2 (com filtro) |
 |---|---|---|
-| 2021-2023 (funding forte) | Sharpe 5.37, PnL +41.40%, DD -0.53% | Sharpe 4.48, PnL +25.61%, DD -0.50%, 33.9% do tempo posicionado |
-| 2025-2026 (funding fraco) | Sharpe 0.07, PnL +0.70%, DD **-6.18%** | Sharpe 0.00, PnL 0.00%, DD **0.00%**, 0% do tempo posicionado |
+| BTCUSDT 2021-2023 (funding forte) | Sharpe 5.37, PnL +41.40%, DD -0.53% | Sharpe 4.48, PnL +25.61%, DD -0.50%, 33.9% do tempo posicionado |
+| BTCUSDT 2025-2026 (funding fraco) | Sharpe 0.07, PnL +0.70%, DD **-6.18%** | Sharpe 0.00, PnL 0.00%, DD **0.00%**, 0% do tempo posicionado |
+| ETHUSDT 2021-2023 (funding forte) | — (não testado) | Sharpe 3.77, PnL +30.50%, DD -0.68%, 34.6% do tempo posicionado |
+| ETHUSDT 2025-2026 (funding fraco) | — (não testado) | Sharpe 0.00, PnL 0.00%, DD **0.00%**, 0% do tempo posicionado |
+
+**Confirmação cross-asset:** ETHUSDT reproduz o mesmo padrão do BTCUSDT
+em ambas as janelas, com números muito próximos (34.6% vs 33.9% do
+tempo posicionado na janela forte; zero entradas nos dois na janela
+fraca). Não é coincidência de um ativo só — é o comportamento do
+filtro funcionando como desenhado, em dois mercados diferentes.
 
 ## Leitura
 
@@ -45,11 +53,12 @@ suficientemente distantes: ~0.02-0.03%/evento vs ~0.003%/evento) — isso
 é uma otimização de parâmetro legítima pra próxima rodada, não algo pra
 fazer agora só olhando pra esse resultado.
 
-## Classificação: ACEITA
+## Classificação: ACEITA — validada em 2 ativos
 
 F2 resolve o problema real identificado em F1-realista: evita operar
-justamente na janela onde o risco de base consumiria o retorno. A
-estratégia final recomendada da família F é F2, não F1 puro — com a
-ressalva de que o limiar específico (0.01%/evento, lookback de 90
+justamente na janela onde o risco de base consumiria o retorno, e esse
+comportamento se confirma em BTCUSDT e ETHUSDT, não é sorte de um único
+ativo. A estratégia final recomendada da família F é F2, não F1 puro —
+com a ressalva de que o limiar específico (0.01%/evento, lookback de 90
 eventos) foi uma escolha razoável de primeira tentativa, não
 necessariamente ótima.

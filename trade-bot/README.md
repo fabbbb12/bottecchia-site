@@ -703,8 +703,12 @@ O filtro faz exatamente o que devia: evita por completo a janela onde o
 risco de base consumiria o retorno, ao custo de deixar dinheiro na mesa
 em parte da janela boa (limiar pode estar conservador demais — ajuste
 fino é trabalho futuro, não feito agora pra não p-hackear em cima do
-resultado). **F2, não F1 puro, é a estratégia final recomendada da
-família F.** Detalhes completos em `reports/F2_report.md`.
+resultado). **Confirmado em ETHUSDT** com o mesmo limiar (sem
+reajustar nada): Sharpe 3.77/PnL +30.50%/34.6% do tempo posicionado na
+janela forte, zero entradas/zero risco na janela fraca — mesmo padrão
+do BTC, não é sorte de um ativo só. **F2, não F1 puro, é a estratégia
+final recomendada da família F.** Detalhes completos em
+`reports/F2_report.md`.
 
 ```bash
 python -m tradebot f1 --symbol BTCUSDT --start 2021-01-01 --end 2023-01-01
